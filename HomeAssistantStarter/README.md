@@ -1,7 +1,7 @@
 
 # Home Assistant Conversational Agent — Capstone Starter
 
-A GitHub‑ready scaffold for your CS capstone: Home Assistant + LLM agent + optional local stack (MQTT, Node‑RED, Ollama). Works on Docker Desktop, Codespaces, or a Raspberry Pi running Docker.
+Home Assistant + LLM agent + optional local stack (MQTT, Node‑RED, Ollama). Works on Docker Desktop, Codespaces, or a Raspberry Pi running Docker.
 
 ## What's inside
 
