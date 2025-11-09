@@ -1,7 +1,0 @@
-{
-  "intent": "call_service",
-  "domain": "light",
-  "service": "turn_on",
-  "entity_id": "light.kitchen",
-  "data": {}
-}
