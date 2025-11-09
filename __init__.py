@@ -1,5 +1,6 @@
 import logging
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import discovery
 
 # The domain of your component.
 DOMAIN = "llm-home-assistant"
@@ -8,15 +9,18 @@ DOMAIN = "llm-home-assistant"
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Hello World component from configuration.yaml."""
-    
-    # This is the "print statement" you are looking for!
-    _LOGGER.info("Hello World component is setting up!")
+    """Set up the component from configuration.yaml."""
 
-    # Store a simple flag or data. This makes it "loaded".
-    hass.data[DOMAIN] = {"message": "Hello!"}
+    _LOGGER.warning("LLM-HA component is setting up!")
     
-    # We have removed the service registration that was causing the error.
+    # --- Load the button platform ---
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass, "button", DOMAIN, {}, config
+        )
+    )
+    
+    _LOGGER.info("Button platform loading initiated.")
 
     # Return True to indicate success
     return True
