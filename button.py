@@ -3,13 +3,10 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-# Import the DOMAIN from our __init__.py file
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# This is your light's ID
-TARGET_ENTITY_ID = "light.third_reality_inc_3rcb01057z"
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -19,44 +16,55 @@ async def async_setup_platform(
 ):
     """Set up the custom button platform."""
     _LOGGER.info("Setting up custom button for llm-home-assistant")
-    async_add_entities([MyCustomButton(hass)])
+    async_add_entities([LLMSubmitButton(hass)])
 
 
-class MyCustomButton(ButtonEntity):
-    """Defines the custom button entity."""
+class LLMSubmitButton(ButtonEntity):
+    """Button entity for submitting LLM commands."""
 
     def __init__(self, hass: HomeAssistant):
         """Initialize the button."""
         self._hass = hass
-        
-        # This is the name that will show up in Home Assistant
-        self._attr_name = "My Custom Logic Button"
-        
-        # This MUST be unique across your entire Home Assistant
-        self._attr_unique_id = "llm_ha_custom_logic_button_01"
-        
-        # You can give it a custom icon
-        self._attr_icon = "mdi:cogs"
-
+        self._attr_name = "Send to Model"
+        self._attr_unique_id = "send_to_model"
+        self._attr_icon = "mdi:send"
 
     async def async_press(self) -> None:
-        """
-        This is the code that runs when the button is pressed.
-        """
+        """Handle button press - submit LLM command."""
+        # Get text from input_text helper
+        command_text = ""
+        try:
+            command_state = self._hass.states.get("input_text.llm_command")
+            if command_state:
+                command_text = command_state.state or ""
+        except Exception as e:
+            _LOGGER.warning(f"Could not read command text: {e}")
         
-        _LOGGER.warning(
-            "Custom Button Pressed! Running our custom logic..."
-        )
-
-        _LOGGER.info(f"Toggling entity: {TARGET_ENTITY_ID}")
+        # Get model from input_select helper
+        model_name = "openai"
+        try:
+            model_state = self._hass.states.get("input_select.llm_model")
+            if model_state:
+                model_name = model_state.state or "openai"
+        except Exception as e:
+            _LOGGER.warning(f"Could not read model selection: {e}")
         
-        await self._hass.services.async_call(
-            "light",
-            "toggle",
-            {
-                "entity_id": TARGET_ENTITY_ID
-            },
-            blocking=True,
-        )
+        if not command_text:
+            _LOGGER.warning("No command text provided")
+            return
         
-        _LOGGER.warning("Custom logic complete.")
+        _LOGGER.info(f"Submitting command: '{command_text}' using model: {model_name}")
+        
+        # Call the service
+        try:
+            await self._hass.services.async_call(
+                DOMAIN,
+                "process_command",
+                {
+                    "text": command_text,
+                    "model": model_name
+                },
+                blocking=False,
+            )
+        except Exception as e:
+            _LOGGER.error(f"Error calling process_command service: {e}", exc_info=True)

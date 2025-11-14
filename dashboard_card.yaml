@@ -1,0 +1,17 @@
+# Dashboard card - paste as Manual card in your dashboard
+type: vertical-stack
+cards:
+  - type: entities
+    title: Input
+    entities:
+      - entity: input_select.llm_model
+        name: Model
+      - entity: input_text.llm_command
+        name: Command
+      - entity: button.send_to_model
+        name: Send to Model
+  - type: entities
+    title: Response
+    entities:
+      - entity: sensor.llm_ha_model_response
+        name: Model Response

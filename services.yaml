@@ -1,0 +1,17 @@
+process_command:
+  name: Process Command
+  description: Send a text command to the LLM model
+  fields:
+    text:
+      name: Text
+      description: The command text to send to the model
+      required: true
+      selector:
+        text:
+    model:
+      name: Model
+      description: The model to use (openai, llama3.3, etc.)
+      required: false
+      selector:
+        text:
+
