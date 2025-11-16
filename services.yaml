@@ -1,17 +1,18 @@
-process_command:
-  name: Process Command
-  description: Send a text command to the LLM model
+chat:
+  name: LLM Chat
+  description: Send a prompt to the LLM; any tool_calls are executed inside Home Assistant.
   fields:
     text:
       name: Text
-      description: The command text to send to the model
+      description: User message to send to the LLM.
       required: true
+      example: "Turn on the kitchen light"
       selector:
         text:
-    model:
-      name: Model
-      description: The model to use (openai, llama3.3, etc.)
+    context:
+      name: Context
+      description: Optional context object.
       required: false
       selector:
-        text:
+        object:
 

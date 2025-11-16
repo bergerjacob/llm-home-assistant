@@ -1,5 +1,5 @@
 {
-  "domain": "llm-home-assistant",
+  "domain": "llm_home_assistant",
   "name": "LLM Home Assistant",
   "codeowners": [],
   "documentation": "https://github.com/...",

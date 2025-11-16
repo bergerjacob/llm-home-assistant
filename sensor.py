@@ -43,9 +43,27 @@ class LLMResponseSensor(SensorEntity):
         return self._attr_native_value
 
     def update_response(self, response_text: str):
-        """Update the sensor with the model response."""
-        self._attr_native_value = response_text
+        """Update the sensor with the model response or prompt."""
+        # For very long text, truncate the state value but keep full text in attributes
+        # Home Assistant state values have a practical limit
+        max_state_length = 255
+        
+        if len(response_text) > max_state_length:
+            # Truncate for state, but keep full text in attributes
+            self._attr_native_value = response_text[:max_state_length] + "..."
+            self._attr_extra_state_attributes = {
+                "full_text": response_text,
+                "text_length": len(response_text),
+                "truncated": True
+            }
+        else:
+            self._attr_native_value = response_text
+            self._attr_extra_state_attributes = {
+                "text_length": len(response_text),
+                "truncated": False
+            }
+        
         # Schedule state update (works from any context)
         self.async_schedule_update_ha_state()
-        _LOGGER.info(f"Updated sensor with response: {response_text}")
+        _LOGGER.info(f"Updated sensor with response (length: {len(response_text)})")
 
