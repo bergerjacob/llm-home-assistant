@@ -1,0 +1,5 @@
+# dont push the cache
+__pycache__/
+
+#dont push the Apple System files
+.DS_Store
