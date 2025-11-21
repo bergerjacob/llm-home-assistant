@@ -1,0 +1,866 @@
+[
+    {
+        "entity_id": "conversation.home_assistant",
+        "state": "2025-11-21T20:25:33.737105+00:00",
+        "attributes": {
+            "friendly_name": "Home Assistant",
+            "supported_features": 1
+        },
+        "last_changed": "2025-11-21T20:33:41.821070+00:00",
+        "last_reported": "2025-11-21T20:33:41.821070+00:00",
+        "last_updated": "2025-11-21T20:33:41.821070+00:00",
+        "context": {
+            "id": "01KAM1YSXXJGKGXYSR32AAGAZT",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "event.backup_automatic_backup",
+        "state": "unknown",
+        "attributes": {
+            "event_types": [
+                "completed",
+                "failed",
+                "in_progress"
+            ],
+            "event_type": null,
+            "friendly_name": "Backup Automatic backup"
+        },
+        "last_changed": "2025-11-21T20:33:41.920199+00:00",
+        "last_reported": "2025-11-21T20:33:41.920199+00:00",
+        "last_updated": "2025-11-21T20:33:41.920199+00:00",
+        "context": {
+            "id": "01KAM1YT10Q63F1CMXMDE1KD0X",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.backup_backup_manager_state",
+        "state": "idle",
+        "attributes": {
+            "options": [
+                "idle",
+                "create_backup",
+                "blocked",
+                "receive_backup",
+                "restore_backup"
+            ],
+            "device_class": "enum",
+            "friendly_name": "Backup Backup Manager state"
+        },
+        "last_changed": "2025-11-21T20:33:54.452291+00:00",
+        "last_reported": "2025-11-21T20:33:54.459573+00:00",
+        "last_updated": "2025-11-21T20:33:54.452291+00:00",
+        "context": {
+            "id": "01KAM1Z68M8GRXA6YPB72XXGMG",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.backup_next_scheduled_automatic_backup",
+        "state": "unknown",
+        "attributes": {
+            "device_class": "timestamp",
+            "friendly_name": "Backup Next scheduled automatic backup"
+        },
+        "last_changed": "2025-11-21T20:33:41.923893+00:00",
+        "last_reported": "2025-11-21T20:33:54.459878+00:00",
+        "last_updated": "2025-11-21T20:33:41.923893+00:00",
+        "context": {
+            "id": "01KAM1YT13WRDKRDKS12QQYKAG",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.backup_last_successful_automatic_backup",
+        "state": "unknown",
+        "attributes": {
+            "device_class": "timestamp",
+            "friendly_name": "Backup Last successful automatic backup"
+        },
+        "last_changed": "2025-11-21T20:33:41.924706+00:00",
+        "last_reported": "2025-11-21T20:33:54.460160+00:00",
+        "last_updated": "2025-11-21T20:33:41.924706+00:00",
+        "context": {
+            "id": "01KAM1YT14WK2054CZ2SFHSCVC",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.backup_last_attempted_automatic_backup",
+        "state": "unknown",
+        "attributes": {
+            "device_class": "timestamp",
+            "friendly_name": "Backup Last attempted automatic backup"
+        },
+        "last_changed": "2025-11-21T20:33:41.925478+00:00",
+        "last_reported": "2025-11-21T20:33:54.460409+00:00",
+        "last_updated": "2025-11-21T20:33:41.925478+00:00",
+        "context": {
+            "id": "01KAM1YT154S43TCSP3HM272MJ",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "zone.home",
+        "state": "0",
+        "attributes": {
+            "latitude": 44.563056,
+            "longitude": -123.2839234,
+            "radius": 100,
+            "passive": false,
+            "persons": [],
+            "editable": true,
+            "icon": "mdi:home",
+            "friendly_name": "Home"
+        },
+        "last_changed": "2025-11-21T20:33:42.400654+00:00",
+        "last_reported": "2025-11-21T20:33:42.400654+00:00",
+        "last_updated": "2025-11-21T20:33:42.400654+00:00",
+        "context": {
+            "id": "01KAM1YTG02MZ8KQ2HGR0XD92T",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "person.llm_ha",
+        "state": "unknown",
+        "attributes": {
+            "editable": true,
+            "id": "llm_ha",
+            "device_trackers": [],
+            "user_id": "88b8811aa5f74ebbb35cabe5065d45bd",
+            "friendly_name": "llm-ha"
+        },
+        "last_changed": "2025-11-21T20:33:42.438471+00:00",
+        "last_reported": "2025-11-21T20:33:54.460713+00:00",
+        "last_updated": "2025-11-21T20:33:54.446621+00:00",
+        "context": {
+            "id": "01KAM1Z68EM2EVJBKW190QV42X",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "input_text.llm_command",
+        "state": "write a haiku",
+        "attributes": {
+            "editable": false,
+            "min": 0,
+            "max": 500,
+            "pattern": null,
+            "mode": "text",
+            "friendly_name": "LLM Command"
+        },
+        "last_changed": "2025-11-21T20:35:27.543151+00:00",
+        "last_reported": "2025-11-21T20:35:27.543151+00:00",
+        "last_updated": "2025-11-21T20:35:27.543151+00:00",
+        "context": {
+            "id": "01KAM2215PKP9Q3Y62C6MB5DNN",
+            "parent_id": null,
+            "user_id": "88b8811aa5f74ebbb35cabe5065d45bd"
+        }
+    },
+    {
+        "entity_id": "input_select.llm_model",
+        "state": "openai",
+        "attributes": {
+            "options": [
+                "openai",
+                "llama3.3"
+            ],
+            "editable": false,
+            "friendly_name": "LLM Model"
+        },
+        "last_changed": "2025-11-21T20:33:44.770954+00:00",
+        "last_reported": "2025-11-21T20:33:44.770954+00:00",
+        "last_updated": "2025-11-21T20:33:44.770954+00:00",
+        "context": {
+            "id": "01KAM1YWT2SRBVXBBENV96PHNY",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sun.sun",
+        "state": "above_horizon",
+        "attributes": {
+            "next_dawn": "2025-11-22T14:46:51.054370+00:00",
+            "next_dusk": "2025-11-22T01:12:11.576173+00:00",
+            "next_midnight": "2025-11-22T07:59:24+00:00",
+            "next_noon": "2025-11-22T19:59:10+00:00",
+            "next_rising": "2025-11-22T15:19:37.333836+00:00",
+            "next_setting": "2025-11-22T00:39:31.390647+00:00",
+            "elevation": 24.89,
+            "azimuth": 188.95,
+            "rising": false,
+            "friendly_name": "Sun"
+        },
+        "last_changed": "2025-11-21T20:33:44.815905+00:00",
+        "last_reported": "2025-11-21T20:35:29.822861+00:00",
+        "last_updated": "2025-11-21T20:33:44.815905+00:00",
+        "context": {
+            "id": "01KAM1YWVFZQRG0MYMV33M85NP",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.sun_next_dawn",
+        "state": "2025-11-22T14:46:51+00:00",
+        "attributes": {
+            "device_class": "timestamp",
+            "friendly_name": "Sun Next dawn"
+        },
+        "last_changed": "2025-11-21T20:33:44.820734+00:00",
+        "last_reported": "2025-11-21T20:33:54.461815+00:00",
+        "last_updated": "2025-11-21T20:33:44.820734+00:00",
+        "context": {
+            "id": "01KAM1YWVMDMRXSWC26H6Z0W5B",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.sun_next_dusk",
+        "state": "2025-11-22T01:12:11+00:00",
+        "attributes": {
+            "device_class": "timestamp",
+            "friendly_name": "Sun Next dusk"
+        },
+        "last_changed": "2025-11-21T20:33:44.822526+00:00",
+        "last_reported": "2025-11-21T20:33:54.462118+00:00",
+        "last_updated": "2025-11-21T20:33:44.822526+00:00",
+        "context": {
+            "id": "01KAM1YWVP0K9FMQ665STDXGRX",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.sun_next_midnight",
+        "state": "2025-11-22T07:59:24+00:00",
+        "attributes": {
+            "device_class": "timestamp",
+            "friendly_name": "Sun Next midnight"
+        },
+        "last_changed": "2025-11-21T20:33:44.823735+00:00",
+        "last_reported": "2025-11-21T20:33:54.462392+00:00",
+        "last_updated": "2025-11-21T20:33:44.823735+00:00",
+        "context": {
+            "id": "01KAM1YWVQJX84T3BKMQAQ8R8F",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.sun_next_noon",
+        "state": "2025-11-22T19:59:10+00:00",
+        "attributes": {
+            "device_class": "timestamp",
+            "friendly_name": "Sun Next noon"
+        },
+        "last_changed": "2025-11-21T20:33:44.825077+00:00",
+        "last_reported": "2025-11-21T20:33:54.462653+00:00",
+        "last_updated": "2025-11-21T20:33:44.825077+00:00",
+        "context": {
+            "id": "01KAM1YWVSN5HXX9B6QJNXW59K",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.sun_next_rising",
+        "state": "2025-11-22T15:19:37+00:00",
+        "attributes": {
+            "device_class": "timestamp",
+            "friendly_name": "Sun Next rising"
+        },
+        "last_changed": "2025-11-21T20:33:44.826260+00:00",
+        "last_reported": "2025-11-21T20:33:54.462908+00:00",
+        "last_updated": "2025-11-21T20:33:44.826260+00:00",
+        "context": {
+            "id": "01KAM1YWVT5VC69RZCW32F6HZX",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.sun_next_setting",
+        "state": "2025-11-22T00:39:31+00:00",
+        "attributes": {
+            "device_class": "timestamp",
+            "friendly_name": "Sun Next setting"
+        },
+        "last_changed": "2025-11-21T20:33:44.827599+00:00",
+        "last_reported": "2025-11-21T20:33:54.463188+00:00",
+        "last_updated": "2025-11-21T20:33:44.827599+00:00",
+        "context": {
+            "id": "01KAM1YWVVRGB5VMWZW6GHEV5B",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "script.turn_off_bedroom_light",
+        "state": "unavailable",
+        "attributes": {
+            "friendly_name": "turn off bedroom light"
+        },
+        "last_changed": "2025-11-21T20:33:45.269765+00:00",
+        "last_reported": "2025-11-21T20:33:54.463825+00:00",
+        "last_updated": "2025-11-21T20:33:45.269765+00:00",
+        "context": {
+            "id": "01KAM1YX9NW5PGQV1SECHAAW4W",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "script.turn_on_bedroom_light",
+        "state": "unavailable",
+        "attributes": {
+            "friendly_name": "turn on bedroom light"
+        },
+        "last_changed": "2025-11-21T20:33:45.270917+00:00",
+        "last_reported": "2025-11-21T20:33:54.464057+00:00",
+        "last_updated": "2025-11-21T20:33:45.270917+00:00",
+        "context": {
+            "id": "01KAM1YX9PD9DYGT2A3PR4YZNG",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "script.script_llm_chat_run_prompt",
+        "state": "off",
+        "attributes": {
+            "last_triggered": null,
+            "mode": "single",
+            "current": 0,
+            "friendly_name": "script.llm_chat_run_prompt"
+        },
+        "last_changed": "2025-11-21T20:33:45.271726+00:00",
+        "last_reported": "2025-11-21T20:33:45.271726+00:00",
+        "last_updated": "2025-11-21T20:33:45.271726+00:00",
+        "context": {
+            "id": "01KAM1YX9QVSHX0A4HHWYBNBBW",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "tts.google_translate_en_com",
+        "state": "2025-11-07T01:41:13.121314+00:00",
+        "attributes": {
+            "friendly_name": "Google Translate en com"
+        },
+        "last_changed": "2025-11-21T20:33:45.319747+00:00",
+        "last_reported": "2025-11-21T20:33:45.319747+00:00",
+        "last_updated": "2025-11-21T20:33:45.319747+00:00",
+        "context": {
+            "id": "01KAM1YXB7791YJANFBD00KGWM",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "todo.shopping_list",
+        "state": "0",
+        "attributes": {
+            "friendly_name": "Shopping List",
+            "supported_features": 15
+        },
+        "last_changed": "2025-11-21T20:33:45.332126+00:00",
+        "last_reported": "2025-11-21T20:33:54.464915+00:00",
+        "last_updated": "2025-11-21T20:33:45.332126+00:00",
+        "context": {
+            "id": "01KAM1YXBM82XE7ZBMC0MGTM89",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "button.send_to_model",
+        "state": "2025-11-21T20:35:27.624481+00:00",
+        "attributes": {
+            "icon": "mdi:send",
+            "friendly_name": "Send to Model"
+        },
+        "last_changed": "2025-11-21T20:35:27.624563+00:00",
+        "last_reported": "2025-11-21T20:35:27.624563+00:00",
+        "last_updated": "2025-11-21T20:35:27.624563+00:00",
+        "context": {
+            "id": "01KAM221888GKN1XMSYKMHK22P",
+            "parent_id": null,
+            "user_id": "88b8811aa5f74ebbb35cabe5065d45bd"
+        }
+    },
+    {
+        "entity_id": "sensor.llm_model_response",
+        "state": "I cannot assist with writing a haiku as it does not involve controlling any devices.",
+        "attributes": {
+            "text_length": 84,
+            "truncated": false,
+            "icon": "mdi:brain",
+            "friendly_name": "LLM Model Response"
+        },
+        "last_changed": "2025-11-21T20:35:31.226418+00:00",
+        "last_reported": "2025-11-21T20:35:31.226418+00:00",
+        "last_updated": "2025-11-21T20:35:31.226418+00:00",
+        "context": {
+            "id": "01KAM224RT2JRT6A1P3ETDCA8S",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "weather.forecast_home",
+        "state": "cloudy",
+        "attributes": {
+            "temperature": 48,
+            "dew_point": 43,
+            "temperature_unit": "\u00b0F",
+            "humidity": 84,
+            "cloud_coverage": 96.1,
+            "uv_index": 1.5,
+            "pressure": 30.26,
+            "pressure_unit": "inHg",
+            "wind_bearing": 25.6,
+            "wind_speed": 2.24,
+            "wind_speed_unit": "mph",
+            "visibility_unit": "mi",
+            "precipitation_unit": "in",
+            "attribution": "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute.",
+            "friendly_name": "Forecast Home",
+            "supported_features": 3
+        },
+        "last_changed": "2025-11-21T20:33:47.416333+00:00",
+        "last_reported": "2025-11-21T20:33:54.465869+00:00",
+        "last_updated": "2025-11-21T20:33:47.416333+00:00",
+        "context": {
+            "id": "01KAM1YZCR3TDP0G1A4EQC4G68",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "binary_sensor.third_reality_inc_3rds17bz",
+        "state": "on",
+        "attributes": {
+            "device_class": "opening",
+            "friendly_name": "Third Reality, Inc 3RDS17BZ"
+        },
+        "last_changed": "2025-11-21T20:33:54.367111+00:00",
+        "last_reported": "2025-11-21T20:33:54.367111+00:00",
+        "last_updated": "2025-11-21T20:33:54.367111+00:00",
+        "context": {
+            "id": "01KAM1Z65ZN88FSR3BZCPPZYBV",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "button.third_reality_inc_3rcb01057z_identify",
+        "state": "unknown",
+        "attributes": {
+            "device_class": "identify",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z Identify"
+        },
+        "last_changed": "2025-11-21T20:33:54.369383+00:00",
+        "last_reported": "2025-11-21T20:33:54.369383+00:00",
+        "last_updated": "2025-11-21T20:33:54.369383+00:00",
+        "context": {
+            "id": "01KAM1Z661886SKVGNY3WD81ER",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "button.third_reality_inc_3rcb01057z_identify_2",
+        "state": "unavailable",
+        "attributes": {
+            "device_class": "identify",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z Identify"
+        },
+        "last_changed": "2025-11-21T20:33:54.370556+00:00",
+        "last_reported": "2025-11-21T20:33:54.370556+00:00",
+        "last_updated": "2025-11-21T20:33:54.370556+00:00",
+        "context": {
+            "id": "01KAM1Z6629KYBYE2W7TX67HGA",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "light.third_reality_inc_3rcb01057z",
+        "state": "off",
+        "attributes": {
+            "min_color_temp_kelvin": 2202,
+            "max_color_temp_kelvin": 7042,
+            "min_mireds": 142,
+            "max_mireds": 454,
+            "supported_color_modes": [
+                "color_temp",
+                "xy"
+            ],
+            "color_mode": null,
+            "brightness": null,
+            "color_temp_kelvin": null,
+            "color_temp": null,
+            "hs_color": null,
+            "rgb_color": null,
+            "xy_color": null,
+            "off_with_transition": false,
+            "off_brightness": 254,
+            "friendly_name": "Third Reality, Inc 3RCB01057Z",
+            "supported_features": 40
+        },
+        "last_changed": "2025-11-21T20:33:54.372877+00:00",
+        "last_reported": "2025-11-21T20:33:54.372877+00:00",
+        "last_updated": "2025-11-21T20:33:54.372877+00:00",
+        "context": {
+            "id": "01KAM1Z664D5T4WV9KKPQM6J36",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "light.third_reality_inc_3rcb01057z_2",
+        "state": "unavailable",
+        "attributes": {
+            "min_color_temp_kelvin": 2202,
+            "max_color_temp_kelvin": 7042,
+            "min_mireds": 142,
+            "max_mireds": 454,
+            "supported_color_modes": [
+                "color_temp",
+                "xy"
+            ],
+            "friendly_name": "Third Reality, Inc 3RCB01057Z",
+            "supported_features": 40
+        },
+        "last_changed": "2025-11-21T20:33:54.374738+00:00",
+        "last_reported": "2025-11-21T20:33:54.374738+00:00",
+        "last_updated": "2025-11-21T20:33:54.374738+00:00",
+        "context": {
+            "id": "01KAM1Z66601JAGZJ3VNY80MZK",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "number.third_reality_inc_3rcb01057z_on_off_transition_time",
+        "state": "3",
+        "attributes": {
+            "min": 0,
+            "max": 65535,
+            "step": 1.0,
+            "mode": "auto",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z On/Off transition time"
+        },
+        "last_changed": "2025-11-21T20:33:54.377557+00:00",
+        "last_reported": "2025-11-21T20:33:54.377557+00:00",
+        "last_updated": "2025-11-21T20:33:54.377557+00:00",
+        "context": {
+            "id": "01KAM1Z669AXJF5D8GG9SR2GB1",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "number.third_reality_inc_3rcb01057z_on_level",
+        "state": "255",
+        "attributes": {
+            "min": 0,
+            "max": 255,
+            "step": 1.0,
+            "mode": "auto",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z On level"
+        },
+        "last_changed": "2025-11-21T20:33:54.378777+00:00",
+        "last_reported": "2025-11-21T20:33:54.378777+00:00",
+        "last_updated": "2025-11-21T20:33:54.378777+00:00",
+        "context": {
+            "id": "01KAM1Z66A6RH8DM4GWJ40K6JX",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "number.third_reality_inc_3rcb01057z_start_up_current_level",
+        "state": "255",
+        "attributes": {
+            "min": 0,
+            "max": 255,
+            "step": 1.0,
+            "mode": "auto",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up current level"
+        },
+        "last_changed": "2025-11-21T20:33:54.380271+00:00",
+        "last_reported": "2025-11-21T20:33:54.380271+00:00",
+        "last_updated": "2025-11-21T20:33:54.380271+00:00",
+        "context": {
+            "id": "01KAM1Z66CZP4KHZ00RSRS75QY",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "number.third_reality_inc_3rcb01057z_start_up_color_temperature",
+        "state": "65535",
+        "attributes": {
+            "min": 142,
+            "max": 454,
+            "step": 1.0,
+            "mode": "auto",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up color temperature"
+        },
+        "last_changed": "2025-11-21T20:33:54.381536+00:00",
+        "last_reported": "2025-11-21T20:33:54.381536+00:00",
+        "last_updated": "2025-11-21T20:33:54.381536+00:00",
+        "context": {
+            "id": "01KAM1Z66DQMT3V89Q0MKEN0JW",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "number.third_reality_inc_3rcb01057z_on_off_transition_time_2",
+        "state": "unavailable",
+        "attributes": {
+            "min": 0,
+            "max": 65535,
+            "step": 1.0,
+            "mode": "auto",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z On/Off transition time"
+        },
+        "last_changed": "2025-11-21T20:33:54.382668+00:00",
+        "last_reported": "2025-11-21T20:33:54.382668+00:00",
+        "last_updated": "2025-11-21T20:33:54.382668+00:00",
+        "context": {
+            "id": "01KAM1Z66EHRS7G08NYJWV000S",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "number.third_reality_inc_3rcb01057z_on_level_2",
+        "state": "unavailable",
+        "attributes": {
+            "min": 0,
+            "max": 255,
+            "step": 1.0,
+            "mode": "auto",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z On level"
+        },
+        "last_changed": "2025-11-21T20:33:54.383739+00:00",
+        "last_reported": "2025-11-21T20:33:54.383739+00:00",
+        "last_updated": "2025-11-21T20:33:54.383739+00:00",
+        "context": {
+            "id": "01KAM1Z66F65H3N1DNYNE3512C",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "number.third_reality_inc_3rcb01057z_start_up_current_level_2",
+        "state": "unavailable",
+        "attributes": {
+            "min": 0,
+            "max": 255,
+            "step": 1.0,
+            "mode": "auto",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up current level"
+        },
+        "last_changed": "2025-11-21T20:33:54.385044+00:00",
+        "last_reported": "2025-11-21T20:33:54.385044+00:00",
+        "last_updated": "2025-11-21T20:33:54.385044+00:00",
+        "context": {
+            "id": "01KAM1Z66H8QAYY3EY4A4GPCW8",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "number.third_reality_inc_3rcb01057z_start_up_color_temperature_2",
+        "state": "unavailable",
+        "attributes": {
+            "min": 142,
+            "max": 454,
+            "step": 1.0,
+            "mode": "auto",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up color temperature"
+        },
+        "last_changed": "2025-11-21T20:33:54.386280+00:00",
+        "last_reported": "2025-11-21T20:33:54.386280+00:00",
+        "last_updated": "2025-11-21T20:33:54.386280+00:00",
+        "context": {
+            "id": "01KAM1Z66JARGMC59PQ1H5YC3X",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "number.third_reality_inc_3rds17bz_open_delay_time",
+        "state": "0",
+        "attributes": {
+            "min": 0,
+            "max": 3600,
+            "step": 1.0,
+            "mode": "auto",
+            "unit_of_measurement": "s",
+            "friendly_name": "Third Reality, Inc 3RDS17BZ Open delay time"
+        },
+        "last_changed": "2025-11-21T20:33:54.387880+00:00",
+        "last_reported": "2025-11-21T20:33:54.387880+00:00",
+        "last_updated": "2025-11-21T20:33:54.387880+00:00",
+        "context": {
+            "id": "01KAM1Z66KA7CZ2QRWK3T1W229",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "select.third_reality_inc_3rcb01057z_start_up_behavior",
+        "state": "On",
+        "attributes": {
+            "options": [
+                "Off",
+                "On",
+                "Toggle",
+                "PreviousValue"
+            ],
+            "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up behavior"
+        },
+        "last_changed": "2025-11-21T20:33:54.390055+00:00",
+        "last_reported": "2025-11-21T20:33:54.390055+00:00",
+        "last_updated": "2025-11-21T20:33:54.390055+00:00",
+        "context": {
+            "id": "01KAM1Z66P0S5HQYQA8JY2TG5P",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "select.third_reality_inc_3rcb01057z_start_up_behavior_2",
+        "state": "unavailable",
+        "attributes": {
+            "options": [
+                "Off",
+                "On",
+                "Toggle",
+                "PreviousValue"
+            ],
+            "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up behavior"
+        },
+        "last_changed": "2025-11-21T20:33:54.391224+00:00",
+        "last_reported": "2025-11-21T20:33:54.391224+00:00",
+        "last_updated": "2025-11-21T20:33:54.391224+00:00",
+        "context": {
+            "id": "01KAM1Z66Q3V9TSJW4V4A22P51",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "sensor.third_reality_inc_3rds17bz_battery",
+        "state": "100.0",
+        "attributes": {
+            "state_class": "measurement",
+            "battery_voltage": 3.0,
+            "unit_of_measurement": "%",
+            "device_class": "battery",
+            "friendly_name": "Third Reality, Inc 3RDS17BZ Battery"
+        },
+        "last_changed": "2025-11-21T20:33:54.429601+00:00",
+        "last_reported": "2025-11-21T20:33:54.429601+00:00",
+        "last_updated": "2025-11-21T20:33:54.429601+00:00",
+        "context": {
+            "id": "01KAM1Z67XPNDPK3VBB72PKPP2",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "update.third_reality_inc_3rcb01057z_firmware",
+        "state": "unknown",
+        "attributes": {
+            "auto_update": false,
+            "display_precision": 2,
+            "installed_version": "0x00000042",
+            "in_progress": false,
+            "latest_version": null,
+            "release_summary": null,
+            "release_url": null,
+            "skipped_version": null,
+            "title": null,
+            "update_percentage": null,
+            "device_class": "firmware",
+            "entity_picture": "https://brands.home-assistant.io/_/zha/icon.png",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z Firmware",
+            "supported_features": 23
+        },
+        "last_changed": "2025-11-21T20:33:54.433704+00:00",
+        "last_reported": "2025-11-21T20:33:54.433704+00:00",
+        "last_updated": "2025-11-21T20:33:54.433704+00:00",
+        "context": {
+            "id": "01KAM1Z681HGMRP5Q6ZBXFM7VG",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "update.third_reality_inc_3rcb01057z_firmware_2",
+        "state": "unavailable",
+        "attributes": {
+            "device_class": "firmware",
+            "entity_picture": "https://brands.home-assistant.io/_/zha/icon.png",
+            "friendly_name": "Third Reality, Inc 3RCB01057Z Firmware",
+            "supported_features": 23
+        },
+        "last_changed": "2025-11-21T20:33:54.434793+00:00",
+        "last_reported": "2025-11-21T20:33:54.434793+00:00",
+        "last_updated": "2025-11-21T20:33:54.434793+00:00",
+        "context": {
+            "id": "01KAM1Z6828E0YNMH7JG4SNY0X",
+            "parent_id": null,
+            "user_id": null
+        }
+    },
+    {
+        "entity_id": "update.third_reality_inc_3rds17bz_firmware",
+        "state": "unknown",
+        "attributes": {
+            "auto_update": false,
+            "display_precision": 2,
+            "installed_version": "0x0000003f",
+            "in_progress": false,
+            "latest_version": null,
+            "release_summary": null,
+            "release_url": null,
+            "skipped_version": null,
+            "title": null,
+            "update_percentage": null,
+            "device_class": "firmware",
+            "entity_picture": "https://brands.home-assistant.io/_/zha/icon.png",
+            "friendly_name": "Third Reality, Inc 3RDS17BZ Firmware",
+            "supported_features": 23
+        },
+        "last_changed": "2025-11-21T20:33:54.435904+00:00",
+        "last_reported": "2025-11-21T20:33:54.435904+00:00",
+        "last_updated": "2025-11-21T20:33:54.435904+00:00",
+        "context": {
+            "id": "01KAM1Z683MHM96C1CHJ37EAJH",
+            "parent_id": null,
+            "user_id": null
+        }
+    }
+]

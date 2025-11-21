@@ -1420,6 +1420,21 @@
           }
         }
       },
+      "model": {
+        "required": false,
+        "description": "The model to use.",
+        "example": "openai",
+        "selector": {
+          "select": {
+            "options": [
+              "openai",
+              "gpt-4o",
+              "llama3.3"
+            ],
+            "custom_value": true
+          }
+        }
+      },
       "context": {
         "required": false,
         "description": "Optional context object.",

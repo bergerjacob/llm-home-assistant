@@ -1,155 +1,165 @@
 """
 Model calling module for LLM Home Assistant.
+Contains the main orchestration logic for processing user requests,
+querying the LLM, and executing the returned actions.
 """
-import json
 import logging
-import sys
 import os
-import subprocess
+import json
+from typing import Any
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.const import ATTR_ENTITY_ID
+
+from .models.openai.call_openai import async_query_gpt4o_with_tools
 
 _LOGGER = logging.getLogger(__name__)
+DOMAIN = "llm_home_assistant"
 
-# Get the directory where this script is located
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Set MODELS_DIR to be the 'models' directory inside this component's directory
-MODELS_DIR = os.path.join(SCRIPT_DIR, "models")
-
-
-def query_model(user_input, model_name="openai"):
+def _is_allowed(
+    allow: dict[str, Any] | None,
+    domain: str,
+    service: str,
+    entity_id: str | None,
+) -> bool:
     """
-    Query the model with user input.
+    Simple allowlist check for safety.
 
-    Args:
-        user_input (str): The text command from Home Assistant
-        model_name (str): The model to use ("openai", "llama3.3", etc.). Defaults to "openai".
+    allow can contain:
+      - domains: list of allowed domains (e.g. ["light", "switch"])
+      - services: list of allowed "<domain>.<service>" strings
+      - entities: list of allowed entity_ids
 
-    Returns:
-        str: The JSON string response from the model
+    If allow is None or empty, everything is allowed.
     """
+    if not allow:
+        return True
 
-    # System instruction for the model
-    system_instruction = "You are a smart home assistant. Output valid JSON only."
+    domains = allow.get("domains")
+    services = allow.get("services")
+    entities = allow.get("entities")
 
-    _LOGGER.info(f"Querying model '{model_name}' with input: {user_input[:100]}...")
+    if domains and domain not in domains:
+        return False
+    if services and f"{domain}.{service}" not in services:
+        return False
+    if entities and entity_id and entity_id not in entities:
+        return False
+
+    return True
+
+
+async def _execute_tool_call(hass: HomeAssistant, action: dict[str, Any], allow_cfg: dict[str, Any] | None) -> None:
+    """
+    Execute a single JSON action item returned by GPT-4o.
+    """
+    _LOGGER.debug("Received GPT action: %s", action)
+
+    domain = action.get("domain")
+    service = action.get("service")
+    entity_id = action.get("entity_id", None)
+    data = action.get("data") or {}
+
+    # Validate required fields
+    if not domain or not service:
+        _LOGGER.error("GPT action missing domain or service: %s", action)
+        return
+
+    # Validate entity exists (if supplied)
+    if entity_id:
+        if hass.states.get(entity_id) is None:
+            _LOGGER.error("GPT requested unknown entity_id: %s", entity_id)
+            return
+        data.setdefault(ATTR_ENTITY_ID, entity_id)
+
+    # Enforce allowlist restrictions
+    if not _is_allowed(allow_cfg, domain, service, entity_id):
+        _LOGGER.warning(
+            "GPT action blocked by allowlist: %s.%s (%s)",
+            domain,
+            service,
+            data,
+        )
+        return
+
+    _LOGGER.info("Executing GPT action %s.%s with %s", domain, service, data)
 
     try:
-        # Model switcher - import and call the appropriate model
-        if model_name == "openai":
-            # Use venv activation to handle Python path correctly
-            activate_script = os.path.join(MODELS_DIR, "openai", "env", "bin", "activate")
-            openai_script_path = os.path.join(MODELS_DIR, "openai", "call_gpt4o.py")
+        await hass.services.async_call(
+            domain,
+            service,
+            data,
+            blocking=True
+        )
+    except Exception as exc:
+        _LOGGER.error(
+            "Service call %s.%s failed with data %s: %s",
+            domain,
+            service,
+            data,
+            exc,
+        )
 
-            if not os.path.exists(activate_script):
-                raise ImportError(f"Could not find venv activate script at {activate_script}")
-            if not os.path.exists(openai_script_path):
-                raise ImportError(f"Could not find OpenAI script at {openai_script_path}")
-            env = os.environ.copy()
-            if "OPENAI_API_KEY" not in env:
-                _LOGGER.warning("OPENAI_API_KEY not set in environment")
 
-            # Build command to activate venv and run Python
-            # Pass arguments via environment variables to avoid escaping issues
-            env["LLM_USER_INPUT"] = user_input
-            env["LLM_SYSTEM_INSTRUCTION"] = system_instruction or ""
+async def call_model_wrapper(hass: HomeAssistant, text: str, model_name: str):
+    """
+    Main wrapper to process the user request.
+    1. Checks API key.
+    2. Calls LLM.
+    3. Updates sensor/events.
+    4. Executes actions.
+    """
+    _LOGGER.info("Processing LLM request: %s (model: %s)", text, model_name)
 
-            cmd = (
-                f"source {activate_script} && "
-                f"python -c \""
-                f"import sys, os; "
-                f"sys.path.insert(0, '{MODELS_DIR}/openai'); "
-                f"from call_gpt4o import query_gpt4o; "
-                f"user_input = os.environ['LLM_USER_INPUT']; "
-                f"system_inst = os.environ.get('LLM_SYSTEM_INSTRUCTION') or None; "
-                f"response = query_gpt4o(user_input, system_inst); "
-                f"print(response, end='')\""
-            )
+    # Retrieve configuration from hass.data
+    data_store = hass.data.get(DOMAIN, {})
+    openai_api_key = data_store.get("openai_api_key")
+    allow_cfg = data_store.get("allow_cfg")
+    
+    if not openai_api_key:
+        _LOGGER.error("No OpenAI API key available; aborting GPT request.")
+        return
 
-            result = subprocess.run(
-                ["/bin/bash", "-c", cmd],
-                capture_output=True,
-                text=True,
-                env=env,
-                timeout=60
-            )
+    # Map 'openai' to 'gpt-4o-mini' to fix 404 error if old value is selected
+    actual_model = model_name
+    if model_name == "openai" or model_name == "gpt-4o":
+        actual_model = "gpt-4o-mini"
 
-            if result.returncode != 0:
-                raise RuntimeError(f"Error calling OpenAI script: {result.stderr}")
+    messages = [{"role": "user", "content": text}]
+    session = async_get_clientsession(hass)
 
-            response_text = result.stdout.strip()
+    try:
+        reply = await async_query_gpt4o_with_tools(
+            hass=hass,
+            session=session,
+            api_key=openai_api_key,
+            model=actual_model,
+            messages=messages,
+        )
+    except Exception as exc:
+        _LOGGER.exception("OpenAI tool-mode call failed: %s", exc)
+        # Update sensor with error
+        sensor_entity = data_store.get("sensor_entity")
+        if sensor_entity:
+            sensor_entity.update_response(f"Error: {exc}")
+        return
 
-        elif model_name == "llama3.3":
-            # Import and use the dummy llama model
-            sys.path.insert(0, os.path.join(MODELS_DIR, "llama3.3"))
-            from call_llama import query_llama
+    # Expected: { "actions": [...], "explanation": "..." }
+    actions: list[dict[str, Any]] = reply.get("actions") or []
+    explanation: str = reply.get("explanation", "")
 
-            response_text = query_llama(user_input, system_instruction)
-
+    if explanation:
+        _LOGGER.info("Assistant explanation: %s", explanation)
+        
+        # Update sensor
+        sensor_entity = data_store.get("sensor_entity")
+        if sensor_entity:
+            sensor_entity.update_response(explanation)
         else:
-            _LOGGER.warning(f"Unknown model '{model_name}', defaulting to OpenAI")
-            # Use venv activation (same as openai case above)
-            activate_script = os.path.join(MODELS_DIR, "openai", "env", "bin", "activate")
-            openai_script_path = os.path.join(MODELS_DIR, "openai", "call_gpt4o.py")
-            env = os.environ.copy()
+            _LOGGER.warning("Sensor entity not found, cannot update display")
+        
+        # Fire event
+        hass.bus.async_fire("llm_response_ready", {"payload": explanation})
 
-            # Pass arguments via environment variables (same as above)
-            env["LLM_USER_INPUT"] = user_input
-            env["LLM_SYSTEM_INSTRUCTION"] = system_instruction or ""
-
-            cmd = (
-                f"source {activate_script} && "
-                f"python -c \""
-                f"import sys, os; "
-                f"sys.path.insert(0, '{MODELS_DIR}/openai'); "
-                f"from call_gpt4o import query_gpt4o; "
-                f"user_input = os.environ['LLM_USER_INPUT']; "
-                f"system_inst = os.environ.get('LLM_SYSTEM_INSTRUCTION') or None; "
-                f"response = query_gpt4o(user_input, system_inst); "
-                f"print(response, end='')\""
-            )
-
-            result = subprocess.run(
-                ["/bin/bash", "-c", cmd],
-                capture_output=True,
-                text=True,
-                env=env,
-                timeout=60
-            )
-
-            if result.returncode != 0:
-                raise RuntimeError(f"Error calling OpenAI script: {result.stderr}")
-
-            response_text = result.stdout.strip()
-
-        _LOGGER.info(f"Model '{model_name}' response: {response_text[:200]}...")
-
-        # Try to parse the response as JSON, if it's not already JSON, wrap it
-        try:
-            # Try to parse as JSON first
-            json.loads(response_text)
-            result = response_text
-        except (json.JSONDecodeError, TypeError):
-            # If not JSON, wrap it in a JSON structure
-            _LOGGER.warning("Model response is not valid JSON, wrapping it")
-            result = json.dumps({
-                "action": "response",
-                "message": response_text
-            })
-
-        return result
-
-    except Exception as e:
-        _LOGGER.error(f"Error calling model '{model_name}': {e}", exc_info=True)
-        # Return error as JSON
-        return json.dumps({
-            "action": "error",
-            "message": f"Error calling model: {str(e)}"
-        })
-
-
-# Keep this block so you can still test it via CLI if needed
-if __name__ == "__main__":
-    import sys
-    input_text = sys.argv[1] if len(sys.argv) > 1 else "Test command"
-    model = sys.argv[2] if len(sys.argv) > 2 else "openai"
-    print(query_model(input_text, model))
+    for action in actions:
+        await _execute_tool_call(hass, action, allow_cfg)

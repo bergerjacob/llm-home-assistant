@@ -59,7 +59,7 @@ class LLMSubmitButton(ButtonEntity):
         try:
             await self._hass.services.async_call(
                 DOMAIN,
-                "process_command",
+                "chat",
                 {
                     "text": command_text,
                     "model": model_name
@@ -67,4 +67,4 @@ class LLMSubmitButton(ButtonEntity):
                 blocking=False,
             )
         except Exception as e:
-            _LOGGER.error(f"Error calling process_command service: {e}", exc_info=True)
+            _LOGGER.error(f"Error calling chat service: {e}", exc_info=True)

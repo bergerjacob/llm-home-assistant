@@ -9,6 +9,17 @@ chat:
       example: "Turn on the kitchen light"
       selector:
         text:
+    model:
+      name: Model
+      description: The model to use (e.g., openai, llama3.3).
+      required: false
+      example: "openai"
+      selector:
+        select:
+          options:
+            - "openai"
+            - "gpt-4o"
+            - "llama3.3"
     context:
       name: Context
       description: Optional context object.
