@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import ATTR_ENTITY_ID
 
-from .models.openai.call_openai import async_query_gpt4o_with_tools
+from .models.openai.call_openai import async_query_openai
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "llm_home_assistant"
@@ -20,7 +20,7 @@ def _is_allowed(
     allow: dict[str, Any] | None,
     domain: str,
     service: str,
-    entity_id: str | None,
+    entity_id: str | list[str] | None,
 ) -> bool:
     """
     Simple allowlist check for safety.
@@ -43,8 +43,12 @@ def _is_allowed(
         return False
     if services and f"{domain}.{service}" not in services:
         return False
-    if entities and entity_id and entity_id not in entities:
-        return False
+    if entities and entity_id:
+        # Handle both single entity (str) and multiple entities (list)
+        entity_list = entity_id if isinstance(entity_id, list) else [entity_id]
+        for eid in entity_list:
+            if eid not in entities:
+                return False
 
     return True
 
@@ -65,12 +69,21 @@ async def _execute_tool_call(hass: HomeAssistant, action: dict[str, Any], allow_
         _LOGGER.error("GPT action missing domain or service: %s", action)
         return
 
-    # Validate entity exists (if supplied)
+    # Handle entity_id (can be string or list of strings)
     if entity_id:
-        if hass.states.get(entity_id) is None:
-            _LOGGER.error("GPT requested unknown entity_id: %s", entity_id)
-            return
-        data.setdefault(ATTR_ENTITY_ID, entity_id)
+        if isinstance(entity_id, list):
+            # Multiple entities: validate all exist
+            for eid in entity_id:
+                if hass.states.get(eid) is None:
+                    _LOGGER.error("GPT requested unknown entity_id: %s", eid)
+                    return
+            data.setdefault(ATTR_ENTITY_ID, entity_id)
+        else:
+            # Single entity: validate exists
+            if hass.states.get(entity_id) is None:
+                _LOGGER.error("GPT requested unknown entity_id: %s", entity_id)
+                return
+            data.setdefault(ATTR_ENTITY_ID, entity_id)
 
     # Enforce allowlist restrictions
     if not _is_allowed(allow_cfg, domain, service, entity_id):
@@ -117,27 +130,26 @@ async def call_model_wrapper(hass: HomeAssistant, text: str, model_name: str):
     allow_cfg = data_store.get("allow_cfg")
     
     if not openai_api_key:
-        _LOGGER.error("No OpenAI API key available; aborting GPT request.")
+        _LOGGER.error("No OpenAI API key available; aborting OpenAI request.")
         return
 
-    # Map 'openai' to 'gpt-4o-mini' to fix 404 error if old value is selected
-    actual_model = model_name
-    if model_name == "openai" or model_name == "gpt-4o":
-        actual_model = "gpt-4o-mini"
+    # Only process OpenAI requests through the OpenAI handler
+    if model_name not in ("openai", "gpt-4o", "gpt-4o-mini", "gpt-5-mini"):
+        _LOGGER.warning("Model '%s' is not handled by OpenAI handler, skipping", model_name)
+        return
 
     messages = [{"role": "user", "content": text}]
     session = async_get_clientsession(hass)
 
     try:
-        reply = await async_query_gpt4o_with_tools(
+        reply = await async_query_openai(
             hass=hass,
             session=session,
             api_key=openai_api_key,
-            model=actual_model,
             messages=messages,
         )
     except Exception as exc:
-        _LOGGER.exception("OpenAI tool-mode call failed: %s", exc)
+        _LOGGER.exception("OpenAI call failed: %s", exc)
         # Update sensor with error
         sensor_entity = data_store.get("sensor_entity")
         if sensor_entity:

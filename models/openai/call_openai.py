@@ -5,7 +5,7 @@ import asyncio
 import json
 import logging
 import os
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from openai import OpenAI
 import aiohttp
@@ -18,13 +18,18 @@ from homeassistant.helpers.service import async_get_all_descriptions
 _LOGGER = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------------------
+# Model Configuration
+# -----------------------------------------------------------------------------
+OPENAI_MODEL = "gpt-5-mini"
+
+# -----------------------------------------------------------------------------
 # JSON-mode schema
 # -----------------------------------------------------------------------------
 
 class Action(BaseModel):
     domain: str
     service: str
-    entity_id: str
+    entity_id: Union[str, list[str]]
     data: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -107,10 +112,9 @@ async def build_hass_context(hass: HomeAssistant) -> str:
 # --------------------------------------------------------------------
 def _blocking_gpt_call(
     api_key: str | None,
-    model: str,
     messages: list[dict[str, Any]],
     hass_context_text: str,
-) -> dict[str, Any]:
+) -> tuple[dict[str, Any], dict[str, int] | None]:
     """
     Synchronous helper that actually calls the OpenAI Chat Completions API.
     This is run in a background thread using run_in_executor.
@@ -119,7 +123,7 @@ def _blocking_gpt_call(
     if not key:
         raise RuntimeError(
             "No OpenAI API key provided. "
-            "Set OPENAI_API_KEY env var or pass api_key into async_query_gpt4o_with_tools."
+            "Set OPENAI_API_KEY env var or pass api_key into async_query_openai."
         )
 
     client = OpenAI(api_key=key)
@@ -141,6 +145,9 @@ def _blocking_gpt_call(
         "  ],\n"
         '  \"explanation\": \"Human-readable summary of what you did\"\n'
         "}\n\n"
+        "IMPORTANT: The 'entity_id' field can be either:\n"
+        "- A single string: \"light.living_room\"\n"
+        "- A list of strings: [\"light.room1\", \"light.room2\"] (for multiple entities)\n\n"
         "Use only domains / services / entity_ids that exist in the "
         "Home Assistant context below.\n\n"
         f"HOME ASSISTANT CONTEXT (states + services):\n{hass_context_text}"
@@ -163,43 +170,53 @@ def _blocking_gpt_call(
     ]
 
     response = client.chat.completions.create(
-        model=model,
+        model=OPENAI_MODEL,
         messages=final_messages,
-        temperature=0.2,
         response_format={"type": "json_object"},
     )
+
+    # Extract token usage from OpenAI API response
+    usage_info = None
+    try:
+        if response.usage:
+            usage_info = {
+                "prompt_tokens": response.usage.prompt_tokens,
+                "completion_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens,
+            }
+    except Exception as e:
+        _LOGGER.error("Failed to extract token usage: %s", e)
 
     content = response.choices[0].message.content
 
     try:
         # Validate against our Plan schema
         plan = Plan.model_validate_json(content)
-        return plan.model_dump()
+        return plan.model_dump(), usage_info
     except Exception as e:
         _LOGGER.error("Failed to parse/validate JSON from model: %s; raw content: %s", e, content)
         # Safe fallback
         return {
             "actions": [],
             "explanation": f"Failed to parse JSON from model: {e}",
-        }
+        }, usage_info
 
 
 # --------------------------------------------------------------------
-# MAIN FUNCTION: async_query_gpt4o_with_tools
+# MAIN FUNCTION: async_query_openai
 # --------------------------------------------------------------------
-async def async_query_gpt4o_with_tools(
+async def async_query_openai(
     hass: HomeAssistant,
     session: aiohttp.ClientSession,
     *,
     api_key: str,
-    model: str,
     messages: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """
-    Call GPT-4o (or similar) using OpenAI’s Python SDK and return a structured
+    Call OpenAI using the configured model and return a structured
     JSON object that Home Assistant can interpret.
     """
-    _LOGGER.debug("Preparing GPT-4o JSON-mode call (actions planner)")
+    _LOGGER.debug("Preparing OpenAI JSON-mode call (model: %s)", OPENAI_MODEL)
 
     # Build the context dynamically (async)
     try:
@@ -214,20 +231,33 @@ async def async_query_gpt4o_with_tools(
     loop = asyncio.get_running_loop()
 
     try:
-        data: dict[str, Any] = await loop.run_in_executor(
+        data: dict[str, Any]
+        usage_info: dict[str, int] | None
+        data, usage_info = await loop.run_in_executor(
             None,
             _blocking_gpt_call,
             api_key,
-            model,
             messages,
             hass_context_text,
         )
+        
+        # Log token usage in the async context where logging is more visible
+        if usage_info:
+            _LOGGER.info(
+                "OpenAI API token usage - Input: %d tokens, Output: %d tokens, Total: %d tokens",
+                usage_info["prompt_tokens"],
+                usage_info["completion_tokens"],
+                usage_info["total_tokens"],
+            )
+        else:
+            _LOGGER.warning("OpenAI API response missing usage information")
+            
     except Exception as e:
-        _LOGGER.error("GPT-4o JSON-mode API request failed: %s", e)
+        _LOGGER.error("OpenAI API request failed: %s", e)
         return {
             "actions": [],
             "explanation": f"Model call failed: {e}",
         }
 
-    _LOGGER.debug("GPT-4o parsed response (actions): %s", data)
+    _LOGGER.debug("OpenAI parsed response (actions): %s", data)
     return data

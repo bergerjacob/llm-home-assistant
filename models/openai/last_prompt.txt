@@ -15,6 +15,10 @@ The JSON MUST have this exact shape:
   "explanation": "Human-readable summary of what you did"
 }
 
+IMPORTANT: The 'entity_id' field can be either:
+- A single string: "light.living_room"
+- A list of strings: ["light.room1", "light.room2"] (for multiple entities)
+
 Use only domains / services / entity_ids that exist in the Home Assistant context below.
 
 HOME ASSISTANT CONTEXT (states + services):
@@ -27,11 +31,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "friendly_name": "Home Assistant",
         "supported_features": 1
       },
-      "last_changed": "2025-11-21T21:50:13.848078+00:00",
-      "last_reported": "2025-11-21T21:50:13.848078+00:00",
-      "last_updated": "2025-11-21T21:50:13.848078+00:00",
+      "last_changed": "2025-11-26T17:29:36.298660+00:00",
+      "last_reported": "2025-11-26T17:29:36.298660+00:00",
+      "last_updated": "2025-11-26T17:29:36.298660+00:00",
       "context": {
-        "id": "01KAM6AYARARP17YAZGW22MN63",
+        "id": "01KB0KDA9AA4S6SR4BD96DS5R9",
         "parent_id": null,
         "user_id": null
       }
@@ -48,11 +52,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "event_type": null,
         "friendly_name": "Backup Automatic backup"
       },
-      "last_changed": "2025-11-21T21:50:13.900134+00:00",
-      "last_reported": "2025-11-21T21:50:13.900134+00:00",
-      "last_updated": "2025-11-21T21:50:13.900134+00:00",
+      "last_changed": "2025-11-26T17:29:36.340978+00:00",
+      "last_reported": "2025-11-26T17:29:36.340978+00:00",
+      "last_updated": "2025-11-26T17:29:36.340978+00:00",
       "context": {
-        "id": "01KAM6AYCC1HJWF0J9CYPFA45B",
+        "id": "01KB0KDAAMF7Q1DZ75G90KTV1M",
         "parent_id": null,
         "user_id": null
       }
@@ -71,11 +75,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "device_class": "enum",
         "friendly_name": "Backup Backup Manager state"
       },
-      "last_changed": "2025-11-21T21:50:30.256712+00:00",
-      "last_reported": "2025-11-21T21:50:30.256712+00:00",
-      "last_updated": "2025-11-21T21:50:30.256712+00:00",
+      "last_changed": "2025-11-26T17:29:49.756747+00:00",
+      "last_reported": "2025-11-26T17:29:49.756747+00:00",
+      "last_updated": "2025-11-26T17:29:49.756747+00:00",
       "context": {
-        "id": "01KAM6BEBGNRNBKZ93E91838NW",
+        "id": "01KB0KDQDW9FMMN20Q7XBHVE5H",
         "parent_id": null,
         "user_id": null
       }
@@ -87,11 +91,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "device_class": "timestamp",
         "friendly_name": "Backup Next scheduled automatic backup"
       },
-      "last_changed": "2025-11-21T21:50:13.903330+00:00",
-      "last_reported": "2025-11-21T21:50:30.256975+00:00",
-      "last_updated": "2025-11-21T21:50:13.903330+00:00",
+      "last_changed": "2025-11-26T17:29:36.344055+00:00",
+      "last_reported": "2025-11-26T17:29:49.756913+00:00",
+      "last_updated": "2025-11-26T17:29:36.344055+00:00",
       "context": {
-        "id": "01KAM6AYCF6MM1VG9AR1N1TBP0",
+        "id": "01KB0KDAARMYGCQE960ZHNMPW2",
         "parent_id": null,
         "user_id": null
       }
@@ -103,11 +107,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "device_class": "timestamp",
         "friendly_name": "Backup Last successful automatic backup"
       },
-      "last_changed": "2025-11-21T21:50:13.903849+00:00",
-      "last_reported": "2025-11-21T21:50:30.257242+00:00",
-      "last_updated": "2025-11-21T21:50:13.903849+00:00",
+      "last_changed": "2025-11-26T17:29:36.344517+00:00",
+      "last_reported": "2025-11-26T17:29:49.756962+00:00",
+      "last_updated": "2025-11-26T17:29:36.344517+00:00",
       "context": {
-        "id": "01KAM6AYCFEEF8PK3ZAP7B9G3T",
+        "id": "01KB0KDAARWDBMJHCSZ25Q3MDA",
         "parent_id": null,
         "user_id": null
       }
@@ -119,11 +123,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "device_class": "timestamp",
         "friendly_name": "Backup Last attempted automatic backup"
       },
-      "last_changed": "2025-11-21T21:50:13.904295+00:00",
-      "last_reported": "2025-11-21T21:50:30.257295+00:00",
-      "last_updated": "2025-11-21T21:50:13.904295+00:00",
+      "last_changed": "2025-11-26T17:29:36.344963+00:00",
+      "last_reported": "2025-11-26T17:29:49.757007+00:00",
+      "last_updated": "2025-11-26T17:29:36.344963+00:00",
       "context": {
-        "id": "01KAM6AYCGTVZ1AF0FJDJP1V23",
+        "id": "01KB0KDAAR56ZNWRP3DGENACQZ",
         "parent_id": null,
         "user_id": null
       }
@@ -141,11 +145,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "icon": "mdi:home",
         "friendly_name": "Home"
       },
-      "last_changed": "2025-11-21T21:50:14.364071+00:00",
-      "last_reported": "2025-11-21T21:50:14.364071+00:00",
-      "last_updated": "2025-11-21T21:50:14.364071+00:00",
+      "last_changed": "2025-11-26T17:29:36.845963+00:00",
+      "last_reported": "2025-11-26T17:29:36.845963+00:00",
+      "last_updated": "2025-11-26T17:29:36.845963+00:00",
       "context": {
-        "id": "01KAM6AYTWMTCPR83W0B3NB1CC",
+        "id": "01KB0KDATDRFWMGJVDRTKD9824",
         "parent_id": null,
         "user_id": null
       }
@@ -160,131 +164,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "user_id": "88b8811aa5f74ebbb35cabe5065d45bd",
         "friendly_name": "llm-ha"
       },
-      "last_changed": "2025-11-21T21:50:14.413106+00:00",
-      "last_reported": "2025-11-21T21:50:30.248912+00:00",
-      "last_updated": "2025-11-21T21:50:30.248912+00:00",
+      "last_changed": "2025-11-26T17:29:36.884280+00:00",
+      "last_reported": "2025-11-26T17:29:49.751943+00:00",
+      "last_updated": "2025-11-26T17:29:49.751943+00:00",
       "context": {
-        "id": "01KAM6BEB82CSKYRP6300ZVB6V",
-        "parent_id": null,
-        "user_id": null
-      }
-    },
-    {
-      "entity_id": "sun.sun",
-      "state": "above_horizon",
-      "attributes": {
-        "next_dawn": "2025-11-22T14:46:51.054370+00:00",
-        "next_dusk": "2025-11-22T01:12:11.576173+00:00",
-        "next_midnight": "2025-11-22T07:59:24+00:00",
-        "next_noon": "2025-11-22T19:59:10+00:00",
-        "next_rising": "2025-11-22T15:19:37.333836+00:00",
-        "next_setting": "2025-11-22T00:39:31.390647+00:00",
-        "elevation": 20.57,
-        "azimuth": 207.85,
-        "rising": false,
-        "friendly_name": "Sun"
-      },
-      "last_changed": "2025-11-21T21:50:14.749223+00:00",
-      "last_reported": "2025-11-21T21:50:59.756088+00:00",
-      "last_updated": "2025-11-21T21:50:14.749223+00:00",
-      "context": {
-        "id": "01KAM6AZ6XZ35J9BSTH0AK40MZ",
-        "parent_id": null,
-        "user_id": null
-      }
-    },
-    {
-      "entity_id": "sensor.sun_next_dawn",
-      "state": "2025-11-22T14:46:51+00:00",
-      "attributes": {
-        "device_class": "timestamp",
-        "friendly_name": "Sun Next dawn"
-      },
-      "last_changed": "2025-11-21T21:50:14.754534+00:00",
-      "last_reported": "2025-11-21T21:50:14.754534+00:00",
-      "last_updated": "2025-11-21T21:50:14.754534+00:00",
-      "context": {
-        "id": "01KAM6AZ72M9BVKY1JBBGFTK4X",
-        "parent_id": null,
-        "user_id": null
-      }
-    },
-    {
-      "entity_id": "sensor.sun_next_dusk",
-      "state": "2025-11-22T01:12:11+00:00",
-      "attributes": {
-        "device_class": "timestamp",
-        "friendly_name": "Sun Next dusk"
-      },
-      "last_changed": "2025-11-21T21:50:14.755797+00:00",
-      "last_reported": "2025-11-21T21:50:14.755797+00:00",
-      "last_updated": "2025-11-21T21:50:14.755797+00:00",
-      "context": {
-        "id": "01KAM6AZ73WFHWT7Y98620RFD7",
-        "parent_id": null,
-        "user_id": null
-      }
-    },
-    {
-      "entity_id": "sensor.sun_next_midnight",
-      "state": "2025-11-22T07:59:24+00:00",
-      "attributes": {
-        "device_class": "timestamp",
-        "friendly_name": "Sun Next midnight"
-      },
-      "last_changed": "2025-11-21T21:50:14.757039+00:00",
-      "last_reported": "2025-11-21T21:50:14.757039+00:00",
-      "last_updated": "2025-11-21T21:50:14.757039+00:00",
-      "context": {
-        "id": "01KAM6AZ75NS01P14ZVDK942RW",
-        "parent_id": null,
-        "user_id": null
-      }
-    },
-    {
-      "entity_id": "sensor.sun_next_noon",
-      "state": "2025-11-22T19:59:10+00:00",
-      "attributes": {
-        "device_class": "timestamp",
-        "friendly_name": "Sun Next noon"
-      },
-      "last_changed": "2025-11-21T21:50:14.757895+00:00",
-      "last_reported": "2025-11-21T21:50:14.757895+00:00",
-      "last_updated": "2025-11-21T21:50:14.757895+00:00",
-      "context": {
-        "id": "01KAM6AZ75JV1JE84C01VWXDH6",
-        "parent_id": null,
-        "user_id": null
-      }
-    },
-    {
-      "entity_id": "sensor.sun_next_rising",
-      "state": "2025-11-22T15:19:37+00:00",
-      "attributes": {
-        "device_class": "timestamp",
-        "friendly_name": "Sun Next rising"
-      },
-      "last_changed": "2025-11-21T21:50:14.758590+00:00",
-      "last_reported": "2025-11-21T21:50:14.758590+00:00",
-      "last_updated": "2025-11-21T21:50:14.758590+00:00",
-      "context": {
-        "id": "01KAM6AZ76MGR6G16S88RQDCEB",
-        "parent_id": null,
-        "user_id": null
-      }
-    },
-    {
-      "entity_id": "sensor.sun_next_setting",
-      "state": "2025-11-22T00:39:31+00:00",
-      "attributes": {
-        "device_class": "timestamp",
-        "friendly_name": "Sun Next setting"
-      },
-      "last_changed": "2025-11-21T21:50:14.759338+00:00",
-      "last_reported": "2025-11-21T21:50:14.759338+00:00",
-      "last_updated": "2025-11-21T21:50:14.759338+00:00",
-      "context": {
-        "id": "01KAM6AZ778KXCD586XZJBA8HQ",
+        "id": "01KB0KDQDQ00EAR7828DF0MS36",
         "parent_id": null,
         "user_id": null
       }
@@ -295,11 +179,11 @@ HOME ASSISTANT CONTEXT (states + services):
       "attributes": {
         "friendly_name": "turn off bedroom light"
       },
-      "last_changed": "2025-11-21T21:50:15.677265+00:00",
-      "last_reported": "2025-11-21T21:50:15.677265+00:00",
-      "last_updated": "2025-11-21T21:50:15.677265+00:00",
+      "last_changed": "2025-11-26T17:29:37.062084+00:00",
+      "last_reported": "2025-11-26T17:29:37.062084+00:00",
+      "last_updated": "2025-11-26T17:29:37.062084+00:00",
       "context": {
-        "id": "01KAM6B03X3ZFY7KZCJN2MVNR9",
+        "id": "01KB0KDB16E98BZB4AXX6Z291K",
         "parent_id": null,
         "user_id": null
       }
@@ -310,11 +194,11 @@ HOME ASSISTANT CONTEXT (states + services):
       "attributes": {
         "friendly_name": "turn on bedroom light"
       },
-      "last_changed": "2025-11-21T21:50:15.677829+00:00",
-      "last_reported": "2025-11-21T21:50:15.677829+00:00",
-      "last_updated": "2025-11-21T21:50:15.677829+00:00",
+      "last_changed": "2025-11-26T17:29:37.062816+00:00",
+      "last_reported": "2025-11-26T17:29:37.062816+00:00",
+      "last_updated": "2025-11-26T17:29:37.062816+00:00",
       "context": {
-        "id": "01KAM6B03XM5C3066Q91TWB9D2",
+        "id": "01KB0KDB1632X8FJ5KSX44Z7HX",
         "parent_id": null,
         "user_id": null
       }
@@ -328,18 +212,138 @@ HOME ASSISTANT CONTEXT (states + services):
         "current": 0,
         "friendly_name": "script.llm_chat_run_prompt"
       },
-      "last_changed": "2025-11-21T21:50:15.678418+00:00",
-      "last_reported": "2025-11-21T21:50:15.678418+00:00",
-      "last_updated": "2025-11-21T21:50:15.678418+00:00",
+      "last_changed": "2025-11-26T17:29:37.063526+00:00",
+      "last_reported": "2025-11-26T17:29:37.063526+00:00",
+      "last_updated": "2025-11-26T17:29:37.063526+00:00",
       "context": {
-        "id": "01KAM6B03Y1VK8MTZM27H1E2K3",
+        "id": "01KB0KDB177AHS1007DDK01W39",
+        "parent_id": null,
+        "user_id": null
+      }
+    },
+    {
+      "entity_id": "sun.sun",
+      "state": "above_horizon",
+      "attributes": {
+        "next_dawn": "2025-12-02T14:58:01.746669+00:00",
+        "next_dusk": "2025-12-02T01:07:29.930140+00:00",
+        "next_midnight": "2025-12-02T08:02:46+00:00",
+        "next_noon": "2025-12-01T20:02:04+00:00",
+        "next_rising": "2025-12-02T15:31:33.538222+00:00",
+        "next_setting": "2025-12-02T00:34:02.835157+00:00",
+        "elevation": 20.59,
+        "azimuth": 158.24,
+        "rising": true,
+        "friendly_name": "Sun"
+      },
+      "last_changed": "2025-12-01T15:28:59.212223+00:00",
+      "last_reported": "2025-12-01T18:34:45.108751+00:00",
+      "last_updated": "2025-12-01T18:34:28.838800+00:00",
+      "context": {
+        "id": "01KBDK3PK6SJCS97PSJ4YYDTMQ",
+        "parent_id": null,
+        "user_id": null
+      }
+    },
+    {
+      "entity_id": "sensor.sun_next_dawn",
+      "state": "2025-12-02T14:58:01+00:00",
+      "attributes": {
+        "device_class": "timestamp",
+        "friendly_name": "Sun Next dawn"
+      },
+      "last_changed": "2025-12-01T14:56:59.196209+00:00",
+      "last_reported": "2025-12-01T16:46:28.816932+00:00",
+      "last_updated": "2025-12-01T14:56:59.196209+00:00",
+      "context": {
+        "id": "01KBD6NESWH9JJTV82J56NS55T",
+        "parent_id": null,
+        "user_id": null
+      }
+    },
+    {
+      "entity_id": "sensor.sun_next_dusk",
+      "state": "2025-12-02T01:07:29+00:00",
+      "attributes": {
+        "device_class": "timestamp",
+        "friendly_name": "Sun Next dusk"
+      },
+      "last_changed": "2025-12-01T01:07:47.558177+00:00",
+      "last_reported": "2025-12-01T16:46:28.817113+00:00",
+      "last_updated": "2025-12-01T01:07:47.558177+00:00",
+      "context": {
+        "id": "01KBBQ7576XTZ18NEF46STQNP1",
+        "parent_id": null,
+        "user_id": null
+      }
+    },
+    {
+      "entity_id": "sensor.sun_next_midnight",
+      "state": "2025-12-02T08:02:46+00:00",
+      "attributes": {
+        "device_class": "timestamp",
+        "friendly_name": "Sun Next midnight"
+      },
+      "last_changed": "2025-12-01T08:02:23.007518+00:00",
+      "last_reported": "2025-12-01T16:46:28.817263+00:00",
+      "last_updated": "2025-12-01T08:02:23.007518+00:00",
+      "context": {
+        "id": "01KBCEY9MZXYQKX1QYGZKH941R",
+        "parent_id": null,
+        "user_id": null
+      }
+    },
+    {
+      "entity_id": "sensor.sun_next_noon",
+      "state": "2025-12-01T20:02:04+00:00",
+      "attributes": {
+        "device_class": "timestamp",
+        "friendly_name": "Sun Next noon"
+      },
+      "last_changed": "2025-11-30T20:01:41.005691+00:00",
+      "last_reported": "2025-12-01T16:46:28.817413+00:00",
+      "last_updated": "2025-11-30T20:01:41.005691+00:00",
+      "context": {
+        "id": "01KBB5PN4DX59MRVQXVMDP8Y5Z",
+        "parent_id": null,
+        "user_id": null
+      }
+    },
+    {
+      "entity_id": "sensor.sun_next_rising",
+      "state": "2025-12-02T15:31:33+00:00",
+      "attributes": {
+        "device_class": "timestamp",
+        "friendly_name": "Sun Next rising"
+      },
+      "last_changed": "2025-12-01T15:30:26.968201+00:00",
+      "last_reported": "2025-12-01T16:46:28.817559+00:00",
+      "last_updated": "2025-12-01T15:30:26.968201+00:00",
+      "context": {
+        "id": "01KBD8JQGRYCJPPMQN921700WC",
+        "parent_id": null,
+        "user_id": null
+      }
+    },
+    {
+      "entity_id": "sensor.sun_next_setting",
+      "state": "2025-12-02T00:34:02+00:00",
+      "attributes": {
+        "device_class": "timestamp",
+        "friendly_name": "Sun Next setting"
+      },
+      "last_changed": "2025-12-01T00:34:24.660486+00:00",
+      "last_reported": "2025-12-01T16:46:28.817702+00:00",
+      "last_updated": "2025-12-01T00:34:24.660486+00:00",
+      "context": {
+        "id": "01KBBNA18M0GJDRW0102GYJV9P",
         "parent_id": null,
         "user_id": null
       }
     },
     {
       "entity_id": "input_text.llm_command",
-      "state": "make the lights the color of libia",
+      "state": "Make the lights the color of a frog",
       "attributes": {
         "editable": false,
         "min": 0,
@@ -348,11 +352,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "text",
         "friendly_name": "LLM Command"
       },
-      "last_changed": "2025-11-21T21:51:01.539587+00:00",
-      "last_reported": "2025-11-21T21:51:01.539587+00:00",
-      "last_updated": "2025-11-21T21:51:01.539587+00:00",
+      "last_changed": "2025-12-01T18:33:40.531565+00:00",
+      "last_reported": "2025-12-01T18:33:40.531565+00:00",
+      "last_updated": "2025-12-01T18:33:40.531565+00:00",
       "context": {
-        "id": "01KAM6CCX2N84S7Y33M0MB646S",
+        "id": "01KBDK27DK0SHRKHDRZZKQBQKC",
         "parent_id": null,
         "user_id": "88b8811aa5f74ebbb35cabe5065d45bd"
       }
@@ -368,26 +372,75 @@ HOME ASSISTANT CONTEXT (states + services):
         "editable": false,
         "friendly_name": "LLM Model"
       },
-      "last_changed": "2025-11-21T21:50:17.734698+00:00",
-      "last_reported": "2025-11-21T21:50:17.734698+00:00",
-      "last_updated": "2025-11-21T21:50:17.734698+00:00",
+      "last_changed": "2025-11-26T17:29:40.058883+00:00",
+      "last_reported": "2025-11-26T17:29:40.058883+00:00",
+      "last_updated": "2025-11-26T17:29:40.058883+00:00",
       "context": {
-        "id": "01KAM6B246T78ZEW5HC28KH30Z",
+        "id": "01KB0KDDYTP5W2TQBG3S53P85P",
         "parent_id": null,
         "user_id": null
       }
     },
     {
-      "entity_id": "tts.google_translate_en_com",
-      "state": "2025-11-07T01:41:13.121314+00:00",
+      "entity_id": "weather.forecast_home",
+      "state": "partlycloudy",
       "attributes": {
-        "friendly_name": "Google Translate en com"
+        "temperature": 42,
+        "dew_point": 32,
+        "temperature_unit": "\u00b0F",
+        "humidity": 68,
+        "cloud_coverage": 28.1,
+        "uv_index": 0.6,
+        "pressure": 30.29,
+        "pressure_unit": "inHg",
+        "wind_bearing": 20.5,
+        "wind_speed": 3.36,
+        "wind_speed_unit": "mph",
+        "visibility_unit": "mi",
+        "precipitation_unit": "in",
+        "attribution": "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute.",
+        "friendly_name": "Forecast Home",
+        "supported_features": 3
       },
-      "last_changed": "2025-11-21T21:50:20.040863+00:00",
-      "last_reported": "2025-11-21T21:50:20.040863+00:00",
-      "last_updated": "2025-11-21T21:50:20.040863+00:00",
+      "last_changed": "2025-12-01T15:31:39.778838+00:00",
+      "last_reported": "2025-12-01T18:31:42.769108+00:00",
+      "last_updated": "2025-12-01T18:31:42.769108+00:00",
       "context": {
-        "id": "01KAM6B4C8AM6QJP5XZEYYFYAW",
+        "id": "01KBDJYMDHZ7K5J5NCEC7CP54F",
+        "parent_id": null,
+        "user_id": null
+      }
+    },
+    {
+      "entity_id": "button.send_to_model",
+      "state": "2025-12-01T18:34:46.591666+00:00",
+      "attributes": {
+        "icon": "mdi:send",
+        "friendly_name": "Send to Model"
+      },
+      "last_changed": "2025-12-01T18:34:46.591835+00:00",
+      "last_reported": "2025-12-01T18:34:46.591835+00:00",
+      "last_updated": "2025-12-01T18:34:46.591835+00:00",
+      "context": {
+        "id": "01KBDK47XYCRXV6S9T0S3WTDXQ",
+        "parent_id": null,
+        "user_id": "88b8811aa5f74ebbb35cabe5065d45bd"
+      }
+    },
+    {
+      "entity_id": "sensor.llm_model_response",
+      "state": "Wrote a three-line haiku into input_text.llm_command.",
+      "attributes": {
+        "text_length": 53,
+        "truncated": false,
+        "icon": "mdi:brain",
+        "friendly_name": "LLM Model Response"
+      },
+      "last_changed": "2025-12-01T18:32:45.169962+00:00",
+      "last_reported": "2025-12-01T18:34:26.376334+00:00",
+      "last_updated": "2025-12-01T18:32:45.169962+00:00",
+      "context": {
+        "id": "01KBDK0HBHHQ4KDDYPEXAQDE7E",
         "parent_id": null,
         "user_id": null
       }
@@ -399,91 +452,42 @@ HOME ASSISTANT CONTEXT (states + services):
         "friendly_name": "Shopping List",
         "supported_features": 15
       },
-      "last_changed": "2025-11-21T21:50:20.263438+00:00",
-      "last_reported": "2025-11-21T21:50:20.263438+00:00",
-      "last_updated": "2025-11-21T21:50:20.263438+00:00",
+      "last_changed": "2025-11-26T17:29:42.217121+00:00",
+      "last_reported": "2025-11-26T17:29:42.217121+00:00",
+      "last_updated": "2025-11-26T17:29:42.217121+00:00",
       "context": {
-        "id": "01KAM6B4K768BZ1J0CM9WDMJ2Z",
+        "id": "01KB0KDG292VWFBZYMBPH4DSSC",
         "parent_id": null,
         "user_id": null
       }
     },
     {
-      "entity_id": "weather.forecast_home",
-      "state": "cloudy",
+      "entity_id": "tts.google_translate_en_com",
+      "state": "2025-11-07T01:41:13.121314+00:00",
       "attributes": {
-        "temperature": 50,
-        "dew_point": 44,
-        "temperature_unit": "\u00b0F",
-        "humidity": 81,
-        "cloud_coverage": 89.1,
-        "uv_index": 1.3,
-        "pressure": 30.24,
-        "pressure_unit": "inHg",
-        "wind_bearing": 38.6,
-        "wind_speed": 2.24,
-        "wind_speed_unit": "mph",
-        "visibility_unit": "mi",
-        "precipitation_unit": "in",
-        "attribution": "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute.",
-        "friendly_name": "Forecast Home",
-        "supported_features": 3
+        "friendly_name": "Google Translate en com"
       },
-      "last_changed": "2025-11-21T21:50:20.281571+00:00",
-      "last_reported": "2025-11-21T21:50:20.281571+00:00",
-      "last_updated": "2025-11-21T21:50:20.281571+00:00",
+      "last_changed": "2025-11-26T17:29:42.242764+00:00",
+      "last_reported": "2025-11-26T17:29:42.242764+00:00",
+      "last_updated": "2025-11-26T17:29:42.242764+00:00",
       "context": {
-        "id": "01KAM6B4KSMBBNJY5MVSZKNE9Z",
-        "parent_id": null,
-        "user_id": null
-      }
-    },
-    {
-      "entity_id": "button.send_to_model",
-      "state": "2025-11-21T21:51:39.059852+00:00",
-      "attributes": {
-        "icon": "mdi:send",
-        "friendly_name": "Send to Model"
-      },
-      "last_changed": "2025-11-21T21:51:39.060028+00:00",
-      "last_reported": "2025-11-21T21:51:39.060028+00:00",
-      "last_updated": "2025-11-21T21:51:39.060028+00:00",
-      "context": {
-        "id": "01KAM6DHHK1QTFAE739WQYEDHT",
-        "parent_id": null,
-        "user_id": "88b8811aa5f74ebbb35cabe5065d45bd"
-      }
-    },
-    {
-      "entity_id": "sensor.llm_model_response",
-      "state": "Changed the lights to the color of Libya (red).",
-      "attributes": {
-        "text_length": 47,
-        "truncated": false,
-        "icon": "mdi:brain",
-        "friendly_name": "LLM Model Response"
-      },
-      "last_changed": "2025-11-21T21:51:15.175101+00:00",
-      "last_reported": "2025-11-21T21:51:20.297422+00:00",
-      "last_updated": "2025-11-21T21:51:15.175101+00:00",
-      "context": {
-        "id": "01KAM6CT77H3QWZ6R7ECJZQD0K",
+        "id": "01KB0KDG328K4MW4WKZTWN8JGH",
         "parent_id": null,
         "user_id": null
       }
     },
     {
       "entity_id": "binary_sensor.third_reality_inc_3rds17bz",
-      "state": "on",
+      "state": "off",
       "attributes": {
         "device_class": "opening",
         "friendly_name": "Third Reality, Inc 3RDS17BZ"
       },
-      "last_changed": "2025-11-21T21:50:27.610388+00:00",
-      "last_reported": "2025-11-21T21:50:27.610388+00:00",
-      "last_updated": "2025-11-21T21:50:27.610388+00:00",
+      "last_changed": "2025-11-26T19:15:37.504159+00:00",
+      "last_reported": "2025-11-26T19:15:37.504159+00:00",
+      "last_updated": "2025-11-26T19:15:37.504159+00:00",
       "context": {
-        "id": "01KAM6BBRTANTTFFSYDY24K6Z4",
+        "id": "01KB0SFED0QT8PMSFF9QRFF6ZF",
         "parent_id": null,
         "user_id": null
       },
@@ -496,11 +500,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "device_class": "identify",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Identify"
       },
-      "last_changed": "2025-11-21T21:50:27.612953+00:00",
-      "last_reported": "2025-11-21T21:50:27.612953+00:00",
-      "last_updated": "2025-11-21T21:50:27.612953+00:00",
+      "last_changed": "2025-11-26T17:29:49.687048+00:00",
+      "last_reported": "2025-11-26T17:29:49.687048+00:00",
+      "last_updated": "2025-11-26T17:29:49.687048+00:00",
       "context": {
-        "id": "01KAM6BBRWM8YFA2VPADR7Z9C1",
+        "id": "01KB0KDQBQ065WKYWKVX1CXN20",
         "parent_id": null,
         "user_id": null
       },
@@ -508,16 +512,16 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "button.third_reality_inc_3rcb01057z_identify_2",
-      "state": "unknown",
+      "state": "unavailable",
       "attributes": {
         "device_class": "identify",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Identify"
       },
-      "last_changed": "2025-11-21T21:50:27.614594+00:00",
-      "last_reported": "2025-11-21T21:50:27.614594+00:00",
-      "last_updated": "2025-11-21T21:50:27.614594+00:00",
+      "last_changed": "2025-11-26T17:29:49.687812+00:00",
+      "last_reported": "2025-11-26T17:29:49.687812+00:00",
+      "last_updated": "2025-11-26T17:29:49.687812+00:00",
       "context": {
-        "id": "01KAM6BBRYWRM7T0CPA23T853C",
+        "id": "01KB0KDQBQD0QKHXNMC8SZMPK7",
         "parent_id": null,
         "user_id": null
       },
@@ -530,11 +534,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "device_class": "identify",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Identify"
       },
-      "last_changed": "2025-11-21T21:50:27.616262+00:00",
-      "last_reported": "2025-11-21T21:50:27.616262+00:00",
-      "last_updated": "2025-11-21T21:50:27.616262+00:00",
+      "last_changed": "2025-11-26T17:29:49.688460+00:00",
+      "last_reported": "2025-11-26T17:29:49.688460+00:00",
+      "last_updated": "2025-11-26T17:29:49.688460+00:00",
       "context": {
-        "id": "01KAM6BBS0T5CRCGD2BNJK08NJ",
+        "id": "01KB0KDQBRN6XP49CF055DWZSX",
         "parent_id": null,
         "user_id": null
       },
@@ -542,16 +546,16 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "button.third_reality_inc_3rcb01057z_identify_4",
-      "state": "unknown",
+      "state": "unavailable",
       "attributes": {
         "device_class": "identify",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Identify"
       },
-      "last_changed": "2025-11-21T21:50:27.617774+00:00",
-      "last_reported": "2025-11-21T21:50:27.617774+00:00",
-      "last_updated": "2025-11-21T21:50:27.617774+00:00",
+      "last_changed": "2025-11-26T21:12:54.138970+00:00",
+      "last_reported": "2025-11-26T21:12:54.138970+00:00",
+      "last_updated": "2025-11-26T21:12:54.138970+00:00",
       "context": {
-        "id": "01KAM6BBS1GJ8AKXNAV604C6VB",
+        "id": "01KB10663TP04VC1Q6ANC2HS09",
         "parent_id": null,
         "user_id": null
       },
@@ -559,7 +563,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "light.third_reality_inc_3rcb01057z",
-      "state": "on",
+      "state": "off",
       "attributes": {
         "min_color_temp_kelvin": 2202,
         "max_color_temp_kelvin": 7042,
@@ -569,41 +573,31 @@ HOME ASSISTANT CONTEXT (states + services):
           "color_temp",
           "xy"
         ],
-        "color_mode": "xy",
-        "brightness": 254,
+        "color_mode": null,
+        "brightness": null,
         "color_temp_kelvin": null,
         "color_temp": null,
-        "hs_color": [
-          0.0,
-          100.0
-        ],
-        "rgb_color": [
-          255,
-          0,
-          0
-        ],
-        "xy_color": [
-          0.701,
-          0.299
-        ],
+        "hs_color": null,
+        "rgb_color": null,
+        "xy_color": null,
         "off_with_transition": false,
-        "off_brightness": null,
+        "off_brightness": 254,
         "friendly_name": "Third Reality, Inc 3RCB01057Z",
         "supported_features": 40
       },
-      "last_changed": "2025-11-21T21:50:27.620233+00:00",
-      "last_reported": "2025-11-21T21:50:35.202313+00:00",
-      "last_updated": "2025-11-21T21:50:35.202313+00:00",
+      "last_changed": "2025-12-01T18:31:42.967516+00:00",
+      "last_reported": "2025-12-01T18:31:42.967826+00:00",
+      "last_updated": "2025-12-01T18:31:42.967516+00:00",
       "context": {
-        "id": "01KAM6BK620QR5GR0NB2HN5VY4",
+        "id": "01KBDJYMDMAPA0061YSVCA0PM8",
         "parent_id": null,
-        "user_id": null
+        "user_id": "88b8811aa5f74ebbb35cabe5065d45bd"
       },
       "area": "Bedroom"
     },
     {
       "entity_id": "light.third_reality_inc_3rcb01057z_2",
-      "state": "on",
+      "state": "unavailable",
       "attributes": {
         "min_color_temp_kelvin": 2202,
         "max_color_temp_kelvin": 7042,
@@ -613,33 +607,14 @@ HOME ASSISTANT CONTEXT (states + services):
           "color_temp",
           "xy"
         ],
-        "color_mode": "xy",
-        "brightness": 254,
-        "color_temp_kelvin": null,
-        "color_temp": null,
-        "hs_color": [
-          0.0,
-          100.0
-        ],
-        "rgb_color": [
-          255,
-          0,
-          0
-        ],
-        "xy_color": [
-          0.701,
-          0.299
-        ],
-        "off_with_transition": false,
-        "off_brightness": null,
         "friendly_name": "Third Reality, Inc 3RCB01057Z",
         "supported_features": 40
       },
-      "last_changed": "2025-11-21T21:50:27.621598+00:00",
-      "last_reported": "2025-11-21T21:51:15.625115+00:00",
-      "last_updated": "2025-11-21T21:51:15.624679+00:00",
+      "last_changed": "2025-11-26T17:29:49.693548+00:00",
+      "last_reported": "2025-11-26T17:29:49.693548+00:00",
+      "last_updated": "2025-11-26T17:29:49.693548+00:00",
       "context": {
-        "id": "01KAM6CTBT07461DHAMB9FPSJK",
+        "id": "01KB0KDQBXVX4GJ60XNKP6G094",
         "parent_id": null,
         "user_id": null
       },
@@ -647,7 +622,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "light.third_reality_inc_3rcb01057z_3",
-      "state": "on",
+      "state": "off",
       "attributes": {
         "min_color_temp_kelvin": 2202,
         "max_color_temp_kelvin": 7042,
@@ -657,41 +632,31 @@ HOME ASSISTANT CONTEXT (states + services):
           "color_temp",
           "xy"
         ],
-        "color_mode": "xy",
-        "brightness": 254,
+        "color_mode": null,
+        "brightness": null,
         "color_temp_kelvin": null,
         "color_temp": null,
-        "hs_color": [
-          0.0,
-          100.0
-        ],
-        "rgb_color": [
-          255,
-          0,
-          0
-        ],
-        "xy_color": [
-          0.701,
-          0.299
-        ],
+        "hs_color": null,
+        "rgb_color": null,
+        "xy_color": null,
         "off_with_transition": false,
-        "off_brightness": null,
+        "off_brightness": 254,
         "friendly_name": "Third Reality, Inc 3RCB01057Z",
         "supported_features": 40
       },
-      "last_changed": "2025-11-21T21:50:27.623980+00:00",
-      "last_reported": "2025-11-21T21:51:15.878333+00:00",
-      "last_updated": "2025-11-21T21:51:15.877926+00:00",
+      "last_changed": "2025-12-01T18:31:42.926140+00:00",
+      "last_reported": "2025-12-01T18:31:42.926458+00:00",
+      "last_updated": "2025-12-01T18:31:42.926140+00:00",
       "context": {
-        "id": "01KAM6CTN9PM0JVPSSH6Q8RCQ7",
+        "id": "01KBDJYMDMAPA0061YSVCA0PM8",
         "parent_id": null,
-        "user_id": null
+        "user_id": "88b8811aa5f74ebbb35cabe5065d45bd"
       },
       "area": "Bedroom"
     },
     {
       "entity_id": "light.third_reality_inc_3rcb01057z_4",
-      "state": "on",
+      "state": "unavailable",
       "attributes": {
         "min_color_temp_kelvin": 2202,
         "max_color_temp_kelvin": 7042,
@@ -701,33 +666,14 @@ HOME ASSISTANT CONTEXT (states + services):
           "color_temp",
           "xy"
         ],
-        "color_mode": "xy",
-        "brightness": 254,
-        "color_temp_kelvin": null,
-        "color_temp": null,
-        "hs_color": [
-          0.0,
-          100.0
-        ],
-        "rgb_color": [
-          255,
-          0,
-          0
-        ],
-        "xy_color": [
-          0.701,
-          0.299
-        ],
-        "off_with_transition": false,
-        "off_brightness": null,
         "friendly_name": "Third Reality, Inc 3RCB01057Z",
         "supported_features": 40
       },
-      "last_changed": "2025-11-21T21:50:27.629823+00:00",
-      "last_reported": "2025-11-21T21:51:16.131417+00:00",
-      "last_updated": "2025-11-21T21:51:16.131010+00:00",
+      "last_changed": "2025-11-26T21:12:54.138463+00:00",
+      "last_reported": "2025-11-26T21:12:54.138463+00:00",
+      "last_updated": "2025-11-26T21:12:54.138463+00:00",
       "context": {
-        "id": "01KAM6CTX6DNY0TC3DP48X5BT1",
+        "id": "01KB10663TZMXJPRJNZAF64MRK",
         "parent_id": null,
         "user_id": null
       },
@@ -743,11 +689,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z On/Off transition time"
       },
-      "last_changed": "2025-11-21T21:50:27.635824+00:00",
-      "last_reported": "2025-11-21T21:50:27.635824+00:00",
-      "last_updated": "2025-11-21T21:50:27.635824+00:00",
+      "last_changed": "2025-11-26T17:29:49.698845+00:00",
+      "last_reported": "2025-11-26T17:29:49.698845+00:00",
+      "last_updated": "2025-11-26T17:29:49.698845+00:00",
       "context": {
-        "id": "01KAM6BBSK6JMS6CQZXBDP64QP",
+        "id": "01KB0KDQC2J43C0G1FW2RG1HSN",
         "parent_id": null,
         "user_id": null
       },
@@ -763,11 +709,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z On level"
       },
-      "last_changed": "2025-11-21T21:50:27.638611+00:00",
-      "last_reported": "2025-11-21T21:50:27.638611+00:00",
-      "last_updated": "2025-11-21T21:50:27.638611+00:00",
+      "last_changed": "2025-11-26T17:29:49.699626+00:00",
+      "last_reported": "2025-11-26T17:29:49.699626+00:00",
+      "last_updated": "2025-11-26T17:29:49.699626+00:00",
       "context": {
-        "id": "01KAM6BBSPDEB3CB5X0HKV3QRX",
+        "id": "01KB0KDQC3JKGB2MNVVK2GB7WT",
         "parent_id": null,
         "user_id": null
       },
@@ -783,11 +729,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up current level"
       },
-      "last_changed": "2025-11-21T21:50:27.641935+00:00",
-      "last_reported": "2025-11-21T21:50:27.641935+00:00",
-      "last_updated": "2025-11-21T21:50:27.641935+00:00",
+      "last_changed": "2025-11-26T17:29:49.700433+00:00",
+      "last_reported": "2025-11-26T17:29:49.700433+00:00",
+      "last_updated": "2025-11-26T17:29:49.700433+00:00",
       "context": {
-        "id": "01KAM6BBSS778SYGAFN01KC8G3",
+        "id": "01KB0KDQC4AEW5AC5YA9D0Z11Q",
         "parent_id": null,
         "user_id": null
       },
@@ -803,11 +749,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up color temperature"
       },
-      "last_changed": "2025-11-21T21:50:27.644629+00:00",
-      "last_reported": "2025-11-21T21:50:27.644629+00:00",
-      "last_updated": "2025-11-21T21:50:27.644629+00:00",
+      "last_changed": "2025-11-26T17:29:49.701389+00:00",
+      "last_reported": "2025-11-26T17:29:49.701389+00:00",
+      "last_updated": "2025-11-26T17:29:49.701389+00:00",
       "context": {
-        "id": "01KAM6BBSWF8AEEGT3RBGA3BK4",
+        "id": "01KB0KDQC5A5MN9BQN71VYCD1C",
         "parent_id": null,
         "user_id": null
       },
@@ -815,7 +761,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "number.third_reality_inc_3rcb01057z_on_off_transition_time_2",
-      "state": "3",
+      "state": "unavailable",
       "attributes": {
         "min": 0,
         "max": 65535,
@@ -823,11 +769,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z On/Off transition time"
       },
-      "last_changed": "2025-11-21T21:50:27.646446+00:00",
-      "last_reported": "2025-11-21T21:50:27.646446+00:00",
-      "last_updated": "2025-11-21T21:50:27.646446+00:00",
+      "last_changed": "2025-11-26T17:29:49.702190+00:00",
+      "last_reported": "2025-11-26T17:29:49.702190+00:00",
+      "last_updated": "2025-11-26T17:29:49.702190+00:00",
       "context": {
-        "id": "01KAM6BBSY6BWGJ9WZYFYJAY7Y",
+        "id": "01KB0KDQC6HKG7S10XGW53ESVJ",
         "parent_id": null,
         "user_id": null
       },
@@ -835,7 +781,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "number.third_reality_inc_3rcb01057z_on_level_2",
-      "state": "255",
+      "state": "unavailable",
       "attributes": {
         "min": 0,
         "max": 255,
@@ -843,11 +789,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z On level"
       },
-      "last_changed": "2025-11-21T21:50:27.647728+00:00",
-      "last_reported": "2025-11-21T21:50:27.647728+00:00",
-      "last_updated": "2025-11-21T21:50:27.647728+00:00",
+      "last_changed": "2025-11-26T17:29:49.702816+00:00",
+      "last_reported": "2025-11-26T17:29:49.702816+00:00",
+      "last_updated": "2025-11-26T17:29:49.702816+00:00",
       "context": {
-        "id": "01KAM6BBSZR8BDA5GBP7RRZ8T8",
+        "id": "01KB0KDQC63WVWJ41A25HGFTQZ",
         "parent_id": null,
         "user_id": null
       },
@@ -855,7 +801,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "number.third_reality_inc_3rcb01057z_start_up_current_level_2",
-      "state": "255",
+      "state": "unavailable",
       "attributes": {
         "min": 0,
         "max": 255,
@@ -863,11 +809,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up current level"
       },
-      "last_changed": "2025-11-21T21:50:27.649173+00:00",
-      "last_reported": "2025-11-21T21:50:27.649173+00:00",
-      "last_updated": "2025-11-21T21:50:27.649173+00:00",
+      "last_changed": "2025-11-26T17:29:49.703418+00:00",
+      "last_reported": "2025-11-26T17:29:49.703418+00:00",
+      "last_updated": "2025-11-26T17:29:49.703418+00:00",
       "context": {
-        "id": "01KAM6BBT1RXMY3BWRM7DWHEW4",
+        "id": "01KB0KDQC7CGQZF56VXEHDYTWX",
         "parent_id": null,
         "user_id": null
       },
@@ -875,7 +821,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "number.third_reality_inc_3rcb01057z_start_up_color_temperature_2",
-      "state": "65535",
+      "state": "unavailable",
       "attributes": {
         "min": 142,
         "max": 454,
@@ -883,11 +829,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up color temperature"
       },
-      "last_changed": "2025-11-21T21:50:27.650575+00:00",
-      "last_reported": "2025-11-21T21:50:27.650575+00:00",
-      "last_updated": "2025-11-21T21:50:27.650575+00:00",
+      "last_changed": "2025-11-26T17:29:49.703997+00:00",
+      "last_reported": "2025-11-26T17:29:49.703997+00:00",
+      "last_updated": "2025-11-26T17:29:49.703997+00:00",
       "context": {
-        "id": "01KAM6BBT2P5HR8KFK8JKSN04M",
+        "id": "01KB0KDQC79BRX3GFM7P0DRVGR",
         "parent_id": null,
         "user_id": null
       },
@@ -904,11 +850,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "unit_of_measurement": "s",
         "friendly_name": "Third Reality, Inc 3RDS17BZ Open delay time"
       },
-      "last_changed": "2025-11-21T21:50:27.651988+00:00",
-      "last_reported": "2025-11-21T21:50:27.651988+00:00",
-      "last_updated": "2025-11-21T21:50:27.651988+00:00",
+      "last_changed": "2025-11-26T17:29:49.705147+00:00",
+      "last_reported": "2025-11-26T17:29:49.705147+00:00",
+      "last_updated": "2025-11-26T17:29:49.705147+00:00",
       "context": {
-        "id": "01KAM6BBT3V67V73657FNKCCQP",
+        "id": "01KB0KDQC9RH5V1C6DX6MVR7EJ",
         "parent_id": null,
         "user_id": null
       },
@@ -924,11 +870,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z On/Off transition time"
       },
-      "last_changed": "2025-11-21T21:50:27.653715+00:00",
-      "last_reported": "2025-11-21T21:50:27.653715+00:00",
-      "last_updated": "2025-11-21T21:50:27.653715+00:00",
+      "last_changed": "2025-11-26T17:29:49.706056+00:00",
+      "last_reported": "2025-11-26T17:29:49.706056+00:00",
+      "last_updated": "2025-11-26T17:29:49.706056+00:00",
       "context": {
-        "id": "01KAM6BBT5726CRCY9QNX5T231",
+        "id": "01KB0KDQCABARX1260GPR0GZ4Y",
         "parent_id": null,
         "user_id": null
       },
@@ -944,11 +890,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z On level"
       },
-      "last_changed": "2025-11-21T21:50:27.654898+00:00",
-      "last_reported": "2025-11-21T21:50:27.654898+00:00",
-      "last_updated": "2025-11-21T21:50:27.654898+00:00",
+      "last_changed": "2025-11-26T17:29:49.708469+00:00",
+      "last_reported": "2025-11-26T17:29:49.708469+00:00",
+      "last_updated": "2025-11-26T17:29:49.708469+00:00",
       "context": {
-        "id": "01KAM6BBT6NVE194WZJ1762JHY",
+        "id": "01KB0KDQCCCDSP2FEPW8FX9H8A",
         "parent_id": null,
         "user_id": null
       },
@@ -964,11 +910,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up current level"
       },
-      "last_changed": "2025-11-21T21:50:27.655950+00:00",
-      "last_reported": "2025-11-21T21:50:27.655950+00:00",
-      "last_updated": "2025-11-21T21:50:27.655950+00:00",
+      "last_changed": "2025-11-26T17:29:49.709692+00:00",
+      "last_reported": "2025-11-26T17:29:49.709692+00:00",
+      "last_updated": "2025-11-26T17:29:49.709692+00:00",
       "context": {
-        "id": "01KAM6BBT78HMH7WDYJ3VC7W1R",
+        "id": "01KB0KDQCDRRY32H20S3YWCE86",
         "parent_id": null,
         "user_id": null
       },
@@ -984,11 +930,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up color temperature"
       },
-      "last_changed": "2025-11-21T21:50:27.657092+00:00",
-      "last_reported": "2025-11-21T21:50:27.657092+00:00",
-      "last_updated": "2025-11-21T21:50:27.657092+00:00",
+      "last_changed": "2025-11-26T17:29:49.710443+00:00",
+      "last_reported": "2025-11-26T17:29:49.710443+00:00",
+      "last_updated": "2025-11-26T17:29:49.710443+00:00",
       "context": {
-        "id": "01KAM6BBT9XKDTJBCHZ2E9DHTW",
+        "id": "01KB0KDQCE3MYCZW0GVJGBV35D",
         "parent_id": null,
         "user_id": null
       },
@@ -996,7 +942,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "number.third_reality_inc_3rcb01057z_on_off_transition_time_4",
-      "state": "3",
+      "state": "unavailable",
       "attributes": {
         "min": 0,
         "max": 65535,
@@ -1004,11 +950,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z On/Off transition time"
       },
-      "last_changed": "2025-11-21T21:50:27.658033+00:00",
-      "last_reported": "2025-11-21T21:50:27.658033+00:00",
-      "last_updated": "2025-11-21T21:50:27.658033+00:00",
+      "last_changed": "2025-11-26T21:12:54.139606+00:00",
+      "last_reported": "2025-11-26T21:12:54.139606+00:00",
+      "last_updated": "2025-11-26T21:12:54.139606+00:00",
       "context": {
-        "id": "01KAM6BBTAGAPFW15H4M1TYM92",
+        "id": "01KB10663VSPXPNP9ZBTTWR04Q",
         "parent_id": null,
         "user_id": null
       },
@@ -1016,7 +962,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "number.third_reality_inc_3rcb01057z_on_level_4",
-      "state": "255",
+      "state": "unavailable",
       "attributes": {
         "min": 0,
         "max": 255,
@@ -1024,11 +970,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z On level"
       },
-      "last_changed": "2025-11-21T21:50:27.658881+00:00",
-      "last_reported": "2025-11-21T21:50:27.658881+00:00",
-      "last_updated": "2025-11-21T21:50:27.658881+00:00",
+      "last_changed": "2025-11-26T21:12:54.139986+00:00",
+      "last_reported": "2025-11-26T21:12:54.139986+00:00",
+      "last_updated": "2025-11-26T21:12:54.139986+00:00",
       "context": {
-        "id": "01KAM6BBTAWEX254819K6Y4T0K",
+        "id": "01KB10663V7YC84NQNBW2YMNGK",
         "parent_id": null,
         "user_id": null
       },
@@ -1036,7 +982,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "number.third_reality_inc_3rcb01057z_start_up_current_level_4",
-      "state": "255",
+      "state": "unavailable",
       "attributes": {
         "min": 0,
         "max": 255,
@@ -1044,11 +990,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up current level"
       },
-      "last_changed": "2025-11-21T21:50:27.659689+00:00",
-      "last_reported": "2025-11-21T21:50:27.659689+00:00",
-      "last_updated": "2025-11-21T21:50:27.659689+00:00",
+      "last_changed": "2025-11-26T21:12:54.140338+00:00",
+      "last_reported": "2025-11-26T21:12:54.140338+00:00",
+      "last_updated": "2025-11-26T21:12:54.140338+00:00",
       "context": {
-        "id": "01KAM6BBTBB7QMS776WXT51DXD",
+        "id": "01KB10663WF9V759H0YY087CPJ",
         "parent_id": null,
         "user_id": null
       },
@@ -1056,7 +1002,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "number.third_reality_inc_3rcb01057z_start_up_color_temperature_4",
-      "state": "65535",
+      "state": "unavailable",
       "attributes": {
         "min": 142,
         "max": 454,
@@ -1064,11 +1010,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "mode": "auto",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up color temperature"
       },
-      "last_changed": "2025-11-21T21:50:27.660923+00:00",
-      "last_reported": "2025-11-21T21:50:27.660923+00:00",
-      "last_updated": "2025-11-21T21:50:27.660923+00:00",
+      "last_changed": "2025-11-26T21:12:54.140795+00:00",
+      "last_reported": "2025-11-26T21:12:54.140795+00:00",
+      "last_updated": "2025-11-26T21:12:54.140795+00:00",
       "context": {
-        "id": "01KAM6BBTCDRE1E9X1BB6AXE06",
+        "id": "01KB10663WJERH6MBQM6S56AHY",
         "parent_id": null,
         "user_id": null
       },
@@ -1086,11 +1032,11 @@ HOME ASSISTANT CONTEXT (states + services):
         ],
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up behavior"
       },
-      "last_changed": "2025-11-21T21:50:27.664836+00:00",
-      "last_reported": "2025-11-21T21:50:27.664836+00:00",
-      "last_updated": "2025-11-21T21:50:27.664836+00:00",
+      "last_changed": "2025-11-26T17:29:49.716387+00:00",
+      "last_reported": "2025-11-26T17:29:49.716387+00:00",
+      "last_updated": "2025-11-26T17:29:49.716387+00:00",
       "context": {
-        "id": "01KAM6BBTGDAXJ3HHGB0W2T131",
+        "id": "01KB0KDQCMWTMPC7Y74019WFPT",
         "parent_id": null,
         "user_id": null
       },
@@ -1098,7 +1044,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "select.third_reality_inc_3rcb01057z_start_up_behavior_2",
-      "state": "On",
+      "state": "unavailable",
       "attributes": {
         "options": [
           "Off",
@@ -1108,11 +1054,11 @@ HOME ASSISTANT CONTEXT (states + services):
         ],
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up behavior"
       },
-      "last_changed": "2025-11-21T21:50:27.666975+00:00",
-      "last_reported": "2025-11-21T21:50:27.666975+00:00",
-      "last_updated": "2025-11-21T21:50:27.666975+00:00",
+      "last_changed": "2025-11-26T17:29:49.717251+00:00",
+      "last_reported": "2025-11-26T17:29:49.717251+00:00",
+      "last_updated": "2025-11-26T17:29:49.717251+00:00",
       "context": {
-        "id": "01KAM6BBTJHZYEWYY6AR1QWHNH",
+        "id": "01KB0KDQCNCFDY1GZWPD0SRQTM",
         "parent_id": null,
         "user_id": null
       },
@@ -1130,11 +1076,11 @@ HOME ASSISTANT CONTEXT (states + services):
         ],
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up behavior"
       },
-      "last_changed": "2025-11-21T21:50:27.668088+00:00",
-      "last_reported": "2025-11-21T21:50:27.668088+00:00",
-      "last_updated": "2025-11-21T21:50:27.668088+00:00",
+      "last_changed": "2025-11-26T17:29:49.718128+00:00",
+      "last_reported": "2025-11-26T17:29:49.718128+00:00",
+      "last_updated": "2025-11-26T17:29:49.718128+00:00",
       "context": {
-        "id": "01KAM6BBTMQZG1TAR4F9XC8FPK",
+        "id": "01KB0KDQCPN4WVJWY3FEHQW36C",
         "parent_id": null,
         "user_id": null
       },
@@ -1142,7 +1088,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "select.third_reality_inc_3rcb01057z_start_up_behavior_4",
-      "state": "On",
+      "state": "unavailable",
       "attributes": {
         "options": [
           "Off",
@@ -1152,11 +1098,11 @@ HOME ASSISTANT CONTEXT (states + services):
         ],
         "friendly_name": "Third Reality, Inc 3RCB01057Z Start-up behavior"
       },
-      "last_changed": "2025-11-21T21:50:27.669481+00:00",
-      "last_reported": "2025-11-21T21:50:27.669481+00:00",
-      "last_updated": "2025-11-21T21:50:27.669481+00:00",
+      "last_changed": "2025-11-26T21:12:54.141666+00:00",
+      "last_reported": "2025-11-26T21:12:54.141666+00:00",
+      "last_updated": "2025-11-26T21:12:54.141666+00:00",
       "context": {
-        "id": "01KAM6BBTNF7BENDANWDZVAAEH",
+        "id": "01KB10663XBC53CEZCB290K8PX",
         "parent_id": null,
         "user_id": null
       },
@@ -1164,7 +1110,7 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "sensor.third_reality_inc_3rds17bz_battery",
-      "state": "100.0",
+      "state": "98.0",
       "attributes": {
         "state_class": "measurement",
         "battery_voltage": 3.0,
@@ -1172,11 +1118,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "device_class": "battery",
         "friendly_name": "Third Reality, Inc 3RDS17BZ Battery"
       },
-      "last_changed": "2025-11-21T21:50:27.684216+00:00",
-      "last_reported": "2025-11-21T21:50:27.684216+00:00",
-      "last_updated": "2025-11-21T21:50:27.684216+00:00",
+      "last_changed": "2025-12-01T13:56:17.300908+00:00",
+      "last_reported": "2025-12-01T13:56:17.300908+00:00",
+      "last_updated": "2025-12-01T13:56:17.300908+00:00",
       "context": {
-        "id": "01KAM6BBV4ZF7FG2EGH3CJTNMS",
+        "id": "01KBD36A8MYPWMJ5GBNHDCY5QE",
         "parent_id": null,
         "user_id": null
       },
@@ -1184,13 +1130,13 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "update.third_reality_inc_3rcb01057z_firmware",
-      "state": "unknown",
+      "state": "on",
       "attributes": {
         "auto_update": false,
         "display_precision": 2,
         "installed_version": "0x00000042",
         "in_progress": false,
-        "latest_version": null,
+        "latest_version": "0x0000004a",
         "release_summary": null,
         "release_url": null,
         "skipped_version": null,
@@ -1201,11 +1147,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "friendly_name": "Third Reality, Inc 3RCB01057Z Firmware",
         "supported_features": 23
       },
-      "last_changed": "2025-11-21T21:50:27.687833+00:00",
-      "last_reported": "2025-11-21T21:50:27.687833+00:00",
-      "last_updated": "2025-11-21T21:50:27.687833+00:00",
+      "last_changed": "2025-11-26T21:23:53.314605+00:00",
+      "last_reported": "2025-11-26T21:23:53.314605+00:00",
+      "last_updated": "2025-11-26T21:23:53.314605+00:00",
       "context": {
-        "id": "01KAM6BBV77F0611S4AEVAH6NQ",
+        "id": "01KB10T9V2VBWVQFXQ78JACFB1",
         "parent_id": null,
         "user_id": null
       },
@@ -1213,28 +1159,18 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "update.third_reality_inc_3rcb01057z_firmware_2",
-      "state": "unknown",
+      "state": "unavailable",
       "attributes": {
-        "auto_update": false,
-        "display_precision": 2,
-        "installed_version": "0x00000042",
-        "in_progress": false,
-        "latest_version": null,
-        "release_summary": null,
-        "release_url": null,
-        "skipped_version": null,
-        "title": null,
-        "update_percentage": null,
         "device_class": "firmware",
         "entity_picture": "https://brands.home-assistant.io/_/zha/icon.png",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Firmware",
         "supported_features": 23
       },
-      "last_changed": "2025-11-21T21:50:27.688576+00:00",
-      "last_reported": "2025-11-21T21:50:27.688576+00:00",
-      "last_updated": "2025-11-21T21:50:27.688576+00:00",
+      "last_changed": "2025-11-26T17:29:49.738410+00:00",
+      "last_reported": "2025-11-26T17:29:49.738410+00:00",
+      "last_updated": "2025-11-26T17:29:49.738410+00:00",
       "context": {
-        "id": "01KAM6BBV8TXH65E4YDAT6FJZH",
+        "id": "01KB0KDQDACV6RX0AG9CM5EDP9",
         "parent_id": null,
         "user_id": null
       },
@@ -1242,13 +1178,13 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "update.third_reality_inc_3rds17bz_firmware",
-      "state": "unknown",
+      "state": "off",
       "attributes": {
         "auto_update": false,
         "display_precision": 2,
         "installed_version": "0x0000003f",
         "in_progress": false,
-        "latest_version": null,
+        "latest_version": "0x0000003f",
         "release_summary": null,
         "release_url": null,
         "skipped_version": null,
@@ -1259,11 +1195,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "friendly_name": "Third Reality, Inc 3RDS17BZ Firmware",
         "supported_features": 23
       },
-      "last_changed": "2025-11-21T21:50:27.689310+00:00",
-      "last_reported": "2025-11-21T21:50:27.689310+00:00",
-      "last_updated": "2025-11-21T21:50:27.689310+00:00",
+      "last_changed": "2025-11-26T18:03:11.064142+00:00",
+      "last_reported": "2025-11-26T18:03:11.064142+00:00",
+      "last_updated": "2025-11-26T18:03:11.064142+00:00",
       "context": {
-        "id": "01KAM6BBV9V90JFV0Y0M57W76F",
+        "id": "01KB0NASTRP7JSE9PWRBF1EE72",
         "parent_id": null,
         "user_id": null
       },
@@ -1271,13 +1207,13 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "update.third_reality_inc_3rcb01057z_firmware_3",
-      "state": "unknown",
+      "state": "on",
       "attributes": {
         "auto_update": false,
         "display_precision": 2,
         "installed_version": "0x00000042",
         "in_progress": false,
-        "latest_version": null,
+        "latest_version": "0x0000004a",
         "release_summary": null,
         "release_url": null,
         "skipped_version": null,
@@ -1288,11 +1224,11 @@ HOME ASSISTANT CONTEXT (states + services):
         "friendly_name": "Third Reality, Inc 3RCB01057Z Firmware",
         "supported_features": 23
       },
-      "last_changed": "2025-11-21T21:50:27.689975+00:00",
-      "last_reported": "2025-11-21T21:50:27.689975+00:00",
-      "last_updated": "2025-11-21T21:50:27.689975+00:00",
+      "last_changed": "2025-11-26T21:23:53.517239+00:00",
+      "last_reported": "2025-11-26T21:23:53.517239+00:00",
+      "last_updated": "2025-11-26T21:23:53.517239+00:00",
       "context": {
-        "id": "01KAM6BBV9YJXFTKRVBFGC7Y7J",
+        "id": "01KB10TA1DTKHWE0047249MN2Y",
         "parent_id": null,
         "user_id": null
       },
@@ -1300,28 +1236,18 @@ HOME ASSISTANT CONTEXT (states + services):
     },
     {
       "entity_id": "update.third_reality_inc_3rcb01057z_firmware_4",
-      "state": "unknown",
+      "state": "unavailable",
       "attributes": {
-        "auto_update": false,
-        "display_precision": 2,
-        "installed_version": "0x00000042",
-        "in_progress": false,
-        "latest_version": null,
-        "release_summary": null,
-        "release_url": null,
-        "skipped_version": null,
-        "title": null,
-        "update_percentage": null,
         "device_class": "firmware",
         "entity_picture": "https://brands.home-assistant.io/_/zha/icon.png",
         "friendly_name": "Third Reality, Inc 3RCB01057Z Firmware",
         "supported_features": 23
       },
-      "last_changed": "2025-11-21T21:50:27.690579+00:00",
-      "last_reported": "2025-11-21T21:50:27.690579+00:00",
-      "last_updated": "2025-11-21T21:50:27.690579+00:00",
+      "last_changed": "2025-11-26T21:12:54.141247+00:00",
+      "last_reported": "2025-11-26T21:12:54.141247+00:00",
+      "last_updated": "2025-11-26T21:12:54.141247+00:00",
       "context": {
-        "id": "01KAM6BBVAZWKK6SWWGR43FP3N",
+        "id": "01KB10663X5G5ZR4QXMC79KW8J",
         "parent_id": null,
         "user_id": null
       },
@@ -1329,60 +1255,6 @@ HOME ASSISTANT CONTEXT (states + services):
     }
   ],
   "services": [
-    {
-      "domain": "persistent_notification",
-      "services": {
-        "create": {
-          "fields": {
-            "message": {
-              "required": true,
-              "example": "Please check your configuration.yaml.",
-              "selector": {
-                "text": {
-                  "multiline": false,
-                  "multiple": false
-                }
-              }
-            },
-            "title": {
-              "example": "Test notification",
-              "selector": {
-                "text": {
-                  "multiline": false,
-                  "multiple": false
-                }
-              }
-            },
-            "notification_id": {
-              "example": 1234,
-              "selector": {
-                "text": {
-                  "multiline": false,
-                  "multiple": false
-                }
-              }
-            }
-          }
-        },
-        "dismiss": {
-          "fields": {
-            "notification_id": {
-              "required": true,
-              "example": 1234,
-              "selector": {
-                "text": {
-                  "multiline": false,
-                  "multiple": false
-                }
-              }
-            }
-          }
-        },
-        "dismiss_all": {
-          "fields": {}
-        }
-      }
-    },
     {
       "domain": "homeassistant",
       "services": {
@@ -1486,6 +1358,60 @@ HOME ASSISTANT CONTEXT (states + services):
       }
     },
     {
+      "domain": "persistent_notification",
+      "services": {
+        "create": {
+          "fields": {
+            "message": {
+              "required": true,
+              "example": "Please check your configuration.yaml.",
+              "selector": {
+                "text": {
+                  "multiple": false,
+                  "multiline": false
+                }
+              }
+            },
+            "title": {
+              "example": "Test notification",
+              "selector": {
+                "text": {
+                  "multiple": false,
+                  "multiline": false
+                }
+              }
+            },
+            "notification_id": {
+              "example": 1234,
+              "selector": {
+                "text": {
+                  "multiple": false,
+                  "multiline": false
+                }
+              }
+            }
+          }
+        },
+        "dismiss": {
+          "fields": {
+            "notification_id": {
+              "required": true,
+              "example": 1234,
+              "selector": {
+                "text": {
+                  "multiple": false,
+                  "multiline": false
+                }
+              }
+            }
+          }
+        },
+        "dismiss_all": {
+          "fields": {}
+        }
+      }
+    },
+    {
       "domain": "system_log",
       "services": {
         "clear": {
@@ -1498,8 +1424,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Something went wrong",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -1515,8 +1441,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "critical"
                   ],
                   "translation_key": "level",
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -1525,8 +1451,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "mycomponent.myplatform",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -1551,8 +1477,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "critical"
                   ],
                   "translation_key": "level",
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -1587,8 +1513,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "light"
                   ],
                   "translation_key": "mode",
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -1719,8 +1645,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "week",
                     "month"
                   ],
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -1853,8 +1779,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "required": true,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -1868,8 +1794,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "ru",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -1948,8 +1874,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "required": true,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -1957,8 +1883,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "NL",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -1972,8 +1898,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "my_conversation_1",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -1988,8 +1914,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "NL",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -2011,167 +1937,6 @@ HOME ASSISTANT CONTEXT (states + services):
         },
         "remote_disconnect": {
           "fields": {}
-        }
-      }
-    },
-    {
-      "domain": "camera",
-      "services": {
-        "enable_motion_detection": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "camera"
-                ]
-              }
-            ]
-          }
-        },
-        "disable_motion_detection": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "camera"
-                ]
-              }
-            ]
-          }
-        },
-        "turn_off": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "camera"
-                ]
-              }
-            ]
-          }
-        },
-        "turn_on": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "camera"
-                ]
-              }
-            ]
-          }
-        },
-        "snapshot": {
-          "fields": {
-            "filename": {
-              "required": true,
-              "example": "/tmp/snapshot_{{ entity_id.name }}.jpg",
-              "selector": {
-                "text": {
-                  "multiline": false,
-                  "multiple": false
-                }
-              }
-            }
-          },
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "camera"
-                ]
-              }
-            ]
-          }
-        },
-        "play_stream": {
-          "fields": {
-            "media_player": {
-              "required": true,
-              "selector": {
-                "entity": {
-                  "domain": [
-                    "media_player"
-                  ],
-                  "multiple": false,
-                  "reorder": false
-                }
-              }
-            },
-            "format": {
-              "default": "hls",
-              "selector": {
-                "select": {
-                  "options": [
-                    "hls"
-                  ],
-                  "multiple": false,
-                  "custom_value": false,
-                  "sort": false
-                }
-              }
-            }
-          },
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "camera"
-                ]
-              }
-            ]
-          }
-        },
-        "record": {
-          "fields": {
-            "filename": {
-              "required": true,
-              "example": "/tmp/snapshot_{{ entity_id.name }}.mp4",
-              "selector": {
-                "text": {
-                  "multiline": false,
-                  "multiple": false
-                }
-              }
-            },
-            "duration": {
-              "default": 30,
-              "selector": {
-                "number": {
-                  "min": 1.0,
-                  "max": 3600.0,
-                  "unit_of_measurement": "seconds",
-                  "step": 1.0,
-                  "mode": "slider"
-                }
-              }
-            },
-            "lookback": {
-              "default": 0,
-              "selector": {
-                "number": {
-                  "min": 0.0,
-                  "max": 300.0,
-                  "unit_of_measurement": "seconds",
-                  "step": 1.0,
-                  "mode": "slider"
-                }
-              }
-            }
-          },
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "camera"
-                ]
-              }
-            ]
-          }
         }
       }
     },
@@ -2212,8 +1977,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "all_lights",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -2277,6 +2042,195 @@ HOME ASSISTANT CONTEXT (states + services):
       }
     },
     {
+      "domain": "camera",
+      "services": {
+        "enable_motion_detection": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "camera"
+                ]
+              }
+            ]
+          }
+        },
+        "disable_motion_detection": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "camera"
+                ]
+              }
+            ]
+          }
+        },
+        "turn_off": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "camera"
+                ]
+              }
+            ]
+          }
+        },
+        "turn_on": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "camera"
+                ]
+              }
+            ]
+          }
+        },
+        "snapshot": {
+          "fields": {
+            "filename": {
+              "required": true,
+              "example": "/tmp/snapshot_{{ entity_id.name }}.jpg",
+              "selector": {
+                "text": {
+                  "multiple": false,
+                  "multiline": false
+                }
+              }
+            }
+          },
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "camera"
+                ]
+              }
+            ]
+          }
+        },
+        "play_stream": {
+          "fields": {
+            "media_player": {
+              "required": true,
+              "selector": {
+                "entity": {
+                  "domain": [
+                    "media_player"
+                  ],
+                  "multiple": false,
+                  "reorder": false
+                }
+              }
+            },
+            "format": {
+              "default": "hls",
+              "selector": {
+                "select": {
+                  "options": [
+                    "hls"
+                  ],
+                  "custom_value": false,
+                  "multiple": false,
+                  "sort": false
+                }
+              }
+            }
+          },
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "camera"
+                ]
+              }
+            ]
+          }
+        },
+        "record": {
+          "fields": {
+            "filename": {
+              "required": true,
+              "example": "/tmp/snapshot_{{ entity_id.name }}.mp4",
+              "selector": {
+                "text": {
+                  "multiple": false,
+                  "multiline": false
+                }
+              }
+            },
+            "duration": {
+              "default": 30,
+              "selector": {
+                "number": {
+                  "min": 1.0,
+                  "max": 3600.0,
+                  "unit_of_measurement": "seconds",
+                  "step": 1.0,
+                  "mode": "slider"
+                }
+              }
+            },
+            "lookback": {
+              "default": 0,
+              "selector": {
+                "number": {
+                  "min": 0.0,
+                  "max": 300.0,
+                  "unit_of_measurement": "seconds",
+                  "step": 1.0,
+                  "mode": "slider"
+                }
+              }
+            }
+          },
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "camera"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "domain": "input_button",
+      "services": {
+        "reload": {
+          "fields": {}
+        },
+        "press": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "input_button"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "domain": "zone",
+      "services": {
+        "reload": {
+          "fields": {}
+        }
+      }
+    },
+    {
       "domain": "logbook",
       "services": {
         "log": {
@@ -2286,8 +2240,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Kitchen",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -2296,8 +2250,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "is being used",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -2313,8 +2267,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "light",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -2323,10 +2277,92 @@ HOME ASSISTANT CONTEXT (states + services):
       }
     },
     {
-      "domain": "zone",
+      "domain": "timer",
       "services": {
         "reload": {
           "fields": {}
+        },
+        "start": {
+          "fields": {
+            "duration": {
+              "example": "00:01:00 or 60",
+              "selector": {
+                "text": {
+                  "multiple": false,
+                  "multiline": false
+                }
+              }
+            }
+          },
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "timer"
+                ]
+              }
+            ]
+          }
+        },
+        "pause": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "timer"
+                ]
+              }
+            ]
+          }
+        },
+        "cancel": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "timer"
+                ]
+              }
+            ]
+          }
+        },
+        "finish": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "timer"
+                ]
+              }
+            ]
+          }
+        },
+        "change": {
+          "fields": {
+            "duration": {
+              "default": 0,
+              "required": true,
+              "example": "00:01:00, 60 or -60",
+              "selector": {
+                "text": {
+                  "multiple": false,
+                  "multiline": false
+                }
+              }
+            }
+          },
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "timer"
+                ]
+              }
+            ]
+          }
         }
       }
     },
@@ -2397,172 +2433,6 @@ HOME ASSISTANT CONTEXT (states + services):
         },
         "reload": {
           "fields": {}
-        }
-      }
-    },
-    {
-      "domain": "input_number",
-      "services": {
-        "reload": {
-          "fields": {}
-        },
-        "set_value": {
-          "fields": {
-            "value": {
-              "required": true,
-              "selector": {
-                "number": {
-                  "min": 0.0,
-                  "max": 9.223372036854776e+18,
-                  "step": 0.001,
-                  "mode": "box"
-                }
-              }
-            }
-          },
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "input_number"
-                ]
-              }
-            ]
-          }
-        },
-        "increment": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "input_number"
-                ]
-              }
-            ]
-          }
-        },
-        "decrement": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "input_number"
-                ]
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "domain": "timer",
-      "services": {
-        "reload": {
-          "fields": {}
-        },
-        "start": {
-          "fields": {
-            "duration": {
-              "example": "00:01:00 or 60",
-              "selector": {
-                "text": {
-                  "multiline": false,
-                  "multiple": false
-                }
-              }
-            }
-          },
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "timer"
-                ]
-              }
-            ]
-          }
-        },
-        "pause": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "timer"
-                ]
-              }
-            ]
-          }
-        },
-        "cancel": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "timer"
-                ]
-              }
-            ]
-          }
-        },
-        "finish": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "timer"
-                ]
-              }
-            ]
-          }
-        },
-        "change": {
-          "fields": {
-            "duration": {
-              "default": 0,
-              "required": true,
-              "example": "00:01:00, 60 or -60",
-              "selector": {
-                "text": {
-                  "multiline": false,
-                  "multiple": false
-                }
-              }
-            }
-          },
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "timer"
-                ]
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "domain": "input_button",
-      "services": {
-        "reload": {
-          "fields": {}
-        },
-        "press": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "input_button"
-                ]
-              }
-            ]
-          }
         }
       }
     },
@@ -2730,10 +2600,118 @@ HOME ASSISTANT CONTEXT (states + services):
       }
     },
     {
+      "domain": "input_number",
+      "services": {
+        "reload": {
+          "fields": {}
+        },
+        "set_value": {
+          "fields": {
+            "value": {
+              "required": true,
+              "selector": {
+                "number": {
+                  "min": 0.0,
+                  "max": 9.223372036854776e+18,
+                  "step": 0.001,
+                  "mode": "box"
+                }
+              }
+            }
+          },
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "input_number"
+                ]
+              }
+            ]
+          }
+        },
+        "increment": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "input_number"
+                ]
+              }
+            ]
+          }
+        },
+        "decrement": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "input_number"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
       "domain": "person",
       "services": {
         "reload": {
           "fields": {}
+        }
+      }
+    },
+    {
+      "domain": "script",
+      "services": {
+        "script_llm_chat_run_prompt": {
+          "name": "script.llm_chat_run_prompt",
+          "description": "",
+          "fields": {},
+          "response": {
+            "optional": true
+          }
+        },
+        "reload": {
+          "fields": {}
+        },
+        "turn_on": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "script"
+                ]
+              }
+            ]
+          }
+        },
+        "turn_off": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "script"
+                ]
+              }
+            ]
+          }
+        },
+        "toggle": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "script"
+                ]
+              }
+            ]
+          }
         }
       }
     },
@@ -2749,8 +2727,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "\"2019-04-20\"",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -2764,8 +2742,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "\"2019-04-20 05:04:20\"",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -2788,29 +2766,6 @@ HOME ASSISTANT CONTEXT (states + services):
                 ]
               }
             ]
-          }
-        }
-      }
-    },
-    {
-      "domain": "schedule",
-      "services": {
-        "reload": {
-          "fields": {}
-        },
-        "get_schedule": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "schedule"
-                ]
-              }
-            ]
-          },
-          "response": {
-            "optional": false
           }
         }
       }
@@ -2889,8 +2844,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "www/my_file.json",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -2902,8 +2857,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "JSON",
                     "YAML"
                   ],
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -2912,6 +2867,108 @@ HOME ASSISTANT CONTEXT (states + services):
           "response": {
             "optional": false
           }
+        }
+      }
+    },
+    {
+      "domain": "input_text",
+      "services": {
+        "reload": {
+          "fields": {}
+        },
+        "set_value": {
+          "fields": {
+            "value": {
+              "required": true,
+              "example": "This is an example text",
+              "selector": {
+                "text": {
+                  "multiple": false,
+                  "multiline": false
+                }
+              }
+            }
+          },
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "input_text"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "domain": "button",
+      "services": {
+        "press": {
+          "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "button"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "domain": "llm_home_assistant",
+      "services": {
+        "process_command": {
+          "fields": {}
+        },
+        "chat": {
+          "fields": {
+            "text": {
+              "name": "Text",
+              "description": "User message to send to the LLM.",
+              "required": true,
+              "example": "Turn on the kitchen light",
+              "selector": {
+                "text": {
+                  "multiple": false,
+                  "multiline": false
+                }
+              }
+            },
+            "model": {
+              "name": "Model",
+              "description": "The model to use (e.g., openai, llama3.3).",
+              "required": false,
+              "example": "openai",
+              "selector": {
+                "select": {
+                  "options": [
+                    "openai",
+                    "gpt-4o",
+                    "llama3.3"
+                  ],
+                  "custom_value": false,
+                  "multiple": false,
+                  "sort": false
+                }
+              }
+            },
+            "context": {
+              "name": "Context",
+              "description": "Optional context object.",
+              "required": false,
+              "selector": {
+                "object": {
+                  "multiple": false
+                }
+              }
+            }
+          },
+          "description": "Send a prompt to the LLM; any tool_calls are executed inside Home Assistant.",
+          "name": "LLM Chat"
         }
       }
     },
@@ -2925,8 +2982,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Beer",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -2939,8 +2996,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Beer",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -2953,8 +3010,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Beer",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -2967,8 +3024,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "required": true,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -2996,156 +3053,25 @@ HOME ASSISTANT CONTEXT (states + services):
       }
     },
     {
-      "domain": "script",
+      "domain": "schedule",
       "services": {
-        "script_llm_chat_run_prompt": {
-          "name": "script.llm_chat_run_prompt",
-          "description": "",
+        "reload": {
+          "fields": {}
+        },
+        "get_schedule": {
           "fields": {},
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "schedule"
+                ]
+              }
+            ]
+          },
           "response": {
-            "optional": true
+            "optional": false
           }
-        },
-        "reload": {
-          "fields": {}
-        },
-        "turn_on": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "script"
-                ]
-              }
-            ]
-          }
-        },
-        "turn_off": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "script"
-                ]
-              }
-            ]
-          }
-        },
-        "toggle": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "script"
-                ]
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "domain": "button",
-      "services": {
-        "press": {
-          "fields": {},
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "button"
-                ]
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "domain": "input_text",
-      "services": {
-        "reload": {
-          "fields": {}
-        },
-        "set_value": {
-          "fields": {
-            "value": {
-              "required": true,
-              "example": "This is an example text",
-              "selector": {
-                "text": {
-                  "multiline": false,
-                  "multiple": false
-                }
-              }
-            }
-          },
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "input_text"
-                ]
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "domain": "llm_home_assistant",
-      "services": {
-        "process_command": {
-          "fields": {}
-        },
-        "chat": {
-          "fields": {
-            "text": {
-              "name": "Text",
-              "description": "User message to send to the LLM.",
-              "required": true,
-              "example": "Turn on the kitchen light",
-              "selector": {
-                "text": {
-                  "multiline": false,
-                  "multiple": false
-                }
-              }
-            },
-            "model": {
-              "name": "Model",
-              "description": "The model to use (e.g., openai, llama3.3).",
-              "required": false,
-              "example": "openai",
-              "selector": {
-                "select": {
-                  "options": [
-                    "openai",
-                    "gpt-4o",
-                    "llama3.3"
-                  ],
-                  "multiple": false,
-                  "custom_value": false,
-                  "sort": false
-                }
-              }
-            },
-            "context": {
-              "name": "Context",
-              "description": "Optional context object.",
-              "required": false,
-              "selector": {
-                "object": {
-                  "multiple": false
-                }
-              }
-            }
-          },
-          "description": "Send a prompt to the LLM; any tool_calls are executed inside Home Assistant.",
-          "name": "LLM Chat"
         }
       }
     },
@@ -3158,8 +3084,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "required": true,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3167,8 +3093,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "required": false,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               },
               "filter": {
@@ -3195,8 +3121,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "The garage door has been open for 10 minutes.",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3204,8 +3130,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Your Garage Door Friend",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3253,6 +3179,48 @@ HOME ASSISTANT CONTEXT (states + services):
       }
     },
     {
+      "domain": "weather",
+      "services": {
+        "get_forecasts": {
+          "fields": {
+            "type": {
+              "required": true,
+              "selector": {
+                "select": {
+                  "options": [
+                    "daily",
+                    "hourly",
+                    "twice_daily"
+                  ],
+                  "translation_key": "forecast_type",
+                  "custom_value": false,
+                  "multiple": false,
+                  "sort": false
+                }
+              }
+            }
+          },
+          "target": {
+            "entity": [
+              {
+                "domain": [
+                  "weather"
+                ],
+                "supported_features": [
+                  1,
+                  2,
+                  4
+                ]
+              }
+            ]
+          },
+          "response": {
+            "optional": false
+          }
+        }
+      }
+    },
+    {
       "domain": "todo",
       "services": {
         "add_item": {
@@ -3262,8 +3230,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Submit income tax return",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3298,8 +3266,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "A more complete description of the to-do item than that provided by the summary.",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -3324,8 +3292,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Submit income tax return",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3333,8 +3301,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Something else",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3347,8 +3315,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "needs_action",
                     "completed"
                   ],
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -3384,8 +3352,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "A more complete description of the to-do item than that provided by the summary.",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -3410,8 +3378,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Submit income tax return",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -3479,48 +3447,6 @@ HOME ASSISTANT CONTEXT (states + services):
       }
     },
     {
-      "domain": "weather",
-      "services": {
-        "get_forecasts": {
-          "fields": {
-            "type": {
-              "required": true,
-              "selector": {
-                "select": {
-                  "options": [
-                    "daily",
-                    "hourly",
-                    "twice_daily"
-                  ],
-                  "translation_key": "forecast_type",
-                  "multiple": false,
-                  "custom_value": false,
-                  "sort": false
-                }
-              }
-            }
-          },
-          "target": {
-            "entity": [
-              {
-                "domain": [
-                  "weather"
-                ],
-                "supported_features": [
-                  1,
-                  2,
-                  4
-                ]
-              }
-            ]
-          },
-          "response": {
-            "optional": false
-          }
-        }
-      }
-    },
-    {
       "domain": "zha",
       "services": {
         "permit": {
@@ -3541,8 +3467,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "00:0d:6f:00:05:7d:2d:34",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3550,8 +3476,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "00:0a:bf:00:01:10:23:35",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3559,8 +3485,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "1234-5678-1234-5678-AABB-CCDD-AABB-CCDD-EEFF",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3568,8 +3494,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -3582,8 +3508,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "00:0d:6f:00:05:7d:2d:34",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -3596,8 +3522,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "00:0d:6f:00:05:7d:2d:34",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3631,8 +3557,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "in",
                     "out"
                   ],
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -3654,8 +3580,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 1,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3663,8 +3589,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 252,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -3677,8 +3603,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "00:0d:6f:00:05:7d:2d:34",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3712,8 +3638,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "in",
                     "out"
                   ],
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -3737,8 +3663,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "client",
                     "server"
                   ],
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -3762,8 +3688,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 252,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -3776,8 +3702,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 546,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3800,8 +3726,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "in",
                     "out"
                   ],
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -3829,8 +3755,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 252,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -3843,8 +3769,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "00:0d:6f:00:05:7d:2d:34",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3890,8 +3816,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "00:0d:6f:00:05:7d:2d:34",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3971,8 +3897,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 1,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -3981,8 +3907,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 1234,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4005,8 +3931,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 1,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4029,8 +3955,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 1,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4053,8 +3979,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 1,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4081,8 +4007,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "1234",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4103,8 +4029,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "1234",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4128,8 +4054,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "1234",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4153,8 +4079,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "1234",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4178,8 +4104,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "1234",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4203,8 +4129,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "1234",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4228,8 +4154,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "1234",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4329,8 +4255,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "away",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4410,8 +4336,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "heat"
                   ],
                   "translation_key": "hvac_mode",
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -4466,8 +4392,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "low",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4492,8 +4418,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "on",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4518,8 +4444,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "on",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4750,8 +4676,8 @@ HOME ASSISTANT CONTEXT (states + services):
               },
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -4887,8 +4813,8 @@ HOME ASSISTANT CONTEXT (states + services):
                     "reverse"
                   ],
                   "translation_key": "direction",
-                  "multiple": false,
                   "custom_value": false,
+                  "multiple": false,
                   "sort": false
                 }
               }
@@ -4942,8 +4868,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "auto",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -5078,8 +5004,8 @@ HOME ASSISTANT CONTEXT (states + services):
               },
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -5289,8 +5215,8 @@ HOME ASSISTANT CONTEXT (states + services):
                         "yellow",
                         "yellowgreen"
                       ],
-                      "multiple": false,
                       "custom_value": false,
+                      "multiple": false,
                       "sort": false
                     }
                   }
@@ -5419,8 +5345,8 @@ HOME ASSISTANT CONTEXT (states + services):
                   "example": "relax",
                   "selector": {
                     "text": {
-                      "multiline": false,
-                      "multiple": false
+                      "multiple": false,
+                      "multiline": false
                     }
                   }
                 },
@@ -5437,8 +5363,8 @@ HOME ASSISTANT CONTEXT (states + services):
                         "long",
                         "short"
                       ],
-                      "multiple": false,
                       "custom_value": false,
+                      "multiple": false,
                       "sort": false
                     }
                   }
@@ -5490,8 +5416,8 @@ HOME ASSISTANT CONTEXT (states + services):
                         "long",
                         "short"
                       ],
-                      "multiple": false,
                       "custom_value": false,
+                      "multiple": false,
                       "sort": false
                     }
                   }
@@ -5597,8 +5523,8 @@ HOME ASSISTANT CONTEXT (states + services):
               },
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -5808,8 +5734,8 @@ HOME ASSISTANT CONTEXT (states + services):
                         "yellow",
                         "yellowgreen"
                       ],
-                      "multiple": false,
                       "custom_value": false,
+                      "multiple": false,
                       "sort": false
                     }
                   }
@@ -5915,8 +5841,8 @@ HOME ASSISTANT CONTEXT (states + services):
                   "example": "relax",
                   "selector": {
                     "text": {
-                      "multiline": false,
-                      "multiple": false
+                      "multiple": false,
+                      "multiline": false
                     }
                   }
                 },
@@ -5933,8 +5859,8 @@ HOME ASSISTANT CONTEXT (states + services):
                         "long",
                         "short"
                       ],
-                      "multiple": false,
                       "custom_value": false,
+                      "multiple": false,
                       "sort": false
                     }
                   }
@@ -5963,8 +5889,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 1234,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -5985,8 +5911,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 1234,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -6007,8 +5933,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": 1234,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -6038,8 +5964,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "required": true,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -6164,8 +6090,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "required": false,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -6196,8 +6122,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "required": false,
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             }
@@ -6298,8 +6224,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "1.0.0",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -6360,8 +6286,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "FF:FF:FF:FF:FF:FF",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -6369,8 +6295,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "phonedave",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -6378,8 +6304,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "Dave",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
@@ -6387,8 +6313,8 @@ HOME ASSISTANT CONTEXT (states + services):
               "example": "home",
               "selector": {
                 "text": {
-                  "multiline": false,
-                  "multiple": false
+                  "multiple": false,
+                  "multiline": false
                 }
               }
             },
