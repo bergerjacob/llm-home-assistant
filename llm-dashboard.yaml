@@ -1,0 +1,8 @@
+title: LLM Assistant
+views:
+  - title: LLM Assistant
+    path: default_view
+    icon: mdi:robot
+    cards:
+      - type: custom:llm-card
+        response_entity: sensor.llm_ha_model_response

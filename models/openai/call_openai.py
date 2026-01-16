@@ -5,6 +5,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 from typing import Any, Dict, Union
 
 from openai import OpenAI
@@ -38,25 +39,100 @@ class Plan(BaseModel):
     explanation: str
 
 # -----------------------------------------------------------------------------
+# Hardcoded Exclusions (Masking)
+# -----------------------------------------------------------------------------
+
+EXCLUDED_SERVICE_DOMAINS = {
+    "logger", "system_log", "recorder", "backup", "ffmpeg",
+    "cloud", "frontend", "config", "hassio", "update", "zha",
+    "persistent_notification", "llm_home_assistant", "device_tracker",
+    "person", "zone", "conversation"
+}
+
+EXCLUDED_SERVICES = {
+    "homeassistant.save_persistent_states",
+    "homeassistant.stop",
+    "homeassistant.restart",
+    "homeassistant.check_config",
+    "homeassistant.update_entity",
+    "homeassistant.reload_core_config",
+    "homeassistant.set_location",
+    "homeassistant.reload_custom_templates",
+    "homeassistant.reload_config_entry",
+    "homeassistant.reload_all",
+    "scene.reload",
+}
+
+EXCLUDED_STATE_DOMAINS = {"zone", "update", "sun", "event"}
+
+EXCLUDED_ENTITY_PATTERNS = [
+    r".*\.llm_.*",
+    r".*\.backup_.*",
+    r".*_identify(_[0-9]+)?$",
+    r".*_firmware(_[0-9]+)?$",
+    r".*_transition_time(_[0-9]+)?$",
+    r".*_on_level(_[0-9]+)?$",
+    r".*_start_up_.*",
+    r".*_behavior(_[0-9]+)?$",
+    r".*_current_level(_[0-9]+)?$",
+    r".*_color_temperature(_[0-9]+)?$",
+    r".*_delay_time(_[0-9]+)?$",
+]
+
+# -----------------------------------------------------------------------------
 # Home Assistant Context Builders
 # -----------------------------------------------------------------------------
 
 def fetch_states(hass: HomeAssistant) -> list[Dict[str, Any]]:
-    """Fetch all entity states from Home Assistant."""
-    # Ensure we return mutable dictionaries, as state.as_dict() might return ReadOnlyDict
-    return [dict(state.as_dict()) for state in hass.states.async_all()]
+    """Fetch all entity states from Home Assistant, applying masks."""
+    states = []
+    for state in hass.states.async_all():
+        entity_id = state.entity_id
+        domain = entity_id.split(".")[0]
+
+        # 1. Domain exclusion
+        if domain in EXCLUDED_STATE_DOMAINS:
+            continue
+
+        # 2. Pattern exclusion
+        if any(re.match(pattern, entity_id) for pattern in EXCLUDED_ENTITY_PATTERNS):
+            continue
+
+        # 3. Specific internal states
+        if entity_id == "sun.sun":
+            continue
+
+        states.append(dict(state.as_dict()))
+    return states
 
 
 async def fetch_services(hass: HomeAssistant) -> list[Dict[str, Any]]:
-    """Fetch all available services from Home Assistant."""
-    # async_get_all_descriptions returns { domain: { service: description } }
+    """Fetch all available services from Home Assistant, applying masks."""
     descriptions = await async_get_all_descriptions(hass)
     result = []
     for domain, services in descriptions.items():
-        result.append({
-            "domain": domain,
-            "services": services
-        })
+        if domain in EXCLUDED_SERVICE_DOMAINS:
+            continue
+
+        filtered_services = {}
+        for svc_name, svc_data in services.items():
+            full_svc = f"{domain}.{svc_name}"
+            
+            # 1. Specific service exclusion
+            if full_svc in EXCLUDED_SERVICES:
+                continue
+            
+            # 2. Pattern: exclude all reload services
+            if svc_name == "reload":
+                continue
+
+            filtered_services[svc_name] = svc_data
+
+        if filtered_services:
+            result.append({
+                "domain": domain,
+                "services": filtered_services
+            })
     return result
 
 
