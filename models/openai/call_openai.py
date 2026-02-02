@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 import json
 import logging
 import os
@@ -184,6 +185,78 @@ async def build_hass_context(hass: HomeAssistant) -> str:
 
 
 # --------------------------------------------------------------------
+# Cache Statistics Tracking
+# --------------------------------------------------------------------
+def _save_cache_stats(usage_info: dict[str, Any]) -> None:
+    """
+    Save cache hit rate statistics to a file for monitoring.
+    """
+    try:
+        stats_path = os.path.join(os.path.dirname(__file__), "cache_stats.json")
+        
+        # Load existing stats if file exists
+        existing_stats = []
+        if os.path.exists(stats_path):
+            try:
+                with open(stats_path, "r", encoding="utf-8") as f:
+                    existing_stats = json.load(f)
+            except Exception as e:
+                _LOGGER.warning("Failed to load existing cache stats: %s", e)
+        
+        # Add timestamp to current stats
+        current_stat = {
+            "timestamp": datetime.now().isoformat(),
+            "prompt_tokens": usage_info.get("prompt_tokens", 0),
+            "cached_tokens": usage_info.get("cached_tokens", 0),
+            "completion_tokens": usage_info.get("completion_tokens", 0),
+            "total_tokens": usage_info.get("total_tokens", 0),
+            "cache_hit_rate": usage_info.get("cache_hit_rate", 0.0),
+        }
+        
+        existing_stats.append(current_stat)
+        
+        # Keep only last 100 entries
+        if len(existing_stats) > 100:
+            existing_stats = existing_stats[-100:]
+        
+        # Calculate overall statistics
+        total_prompt_tokens = sum(s["prompt_tokens"] for s in existing_stats)
+        total_cached_tokens = sum(s["cached_tokens"] for s in existing_stats)
+        overall_cache_hit_rate = (
+            total_cached_tokens / total_prompt_tokens * 100
+            if total_prompt_tokens > 0 else 0
+        )
+        
+        # Save to file with summary
+        output = {
+            "summary": {
+                "total_calls": len(existing_stats),
+                "total_prompt_tokens": total_prompt_tokens,
+                "total_cached_tokens": total_cached_tokens,
+                "overall_cache_hit_rate": round(overall_cache_hit_rate, 2),
+                "last_cache_hit_rate": round(current_stat["cache_hit_rate"], 2),
+            },
+            "history": existing_stats,
+        }
+        
+        with open(stats_path, "w", encoding="utf-8") as f:
+            json.dump(output, f, indent=2)
+        
+        _LOGGER.info(
+            "Cache stats - Current: %.1f%% (%d/%d tokens), Overall: %.1f%% (%d/%d tokens)",
+            current_stat["cache_hit_rate"],
+            current_stat["cached_tokens"],
+            current_stat["prompt_tokens"],
+            overall_cache_hit_rate,
+            total_cached_tokens,
+            total_prompt_tokens,
+        )
+        
+    except Exception as e:
+        _LOGGER.warning("Failed to save cache stats: %s", e)
+
+
+# --------------------------------------------------------------------
 # INTERNAL: blocking call to OpenAI (run in executor)
 # --------------------------------------------------------------------
 def _blocking_gpt_call(
@@ -260,6 +333,19 @@ def _blocking_gpt_call(
                 "completion_tokens": response.usage.completion_tokens,
                 "total_tokens": response.usage.total_tokens,
             }
+            
+            # Extract cache information if available
+            if hasattr(response.usage, 'prompt_tokens_details'):
+                details = response.usage.prompt_tokens_details
+                if details and hasattr(details, 'cached_tokens'):
+                    usage_info["cached_tokens"] = details.cached_tokens
+                    usage_info["cache_hit_rate"] = (
+                        details.cached_tokens / response.usage.prompt_tokens * 100
+                        if response.usage.prompt_tokens > 0 else 0
+                    )
+            
+            # Save cache statistics to file
+            _save_cache_stats(usage_info)
     except Exception as e:
         _LOGGER.error("Failed to extract token usage: %s", e)
 
@@ -319,11 +405,16 @@ async def async_query_openai(
         
         # Log token usage in the async context where logging is more visible
         if usage_info:
+            cache_info = ""
+            if "cached_tokens" in usage_info:
+                cache_info = f", Cached: {usage_info['cached_tokens']} tokens ({usage_info['cache_hit_rate']:.1f}%)"
+            
             _LOGGER.info(
-                "OpenAI API token usage - Input: %d tokens, Output: %d tokens, Total: %d tokens",
+                "OpenAI API token usage - Input: %d tokens, Output: %d tokens, Total: %d tokens%s",
                 usage_info["prompt_tokens"],
                 usage_info["completion_tokens"],
                 usage_info["total_tokens"],
+                cache_info,
             )
         else:
             _LOGGER.warning("OpenAI API response missing usage information")
