@@ -6,5 +6,12 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/...",
   "requirements": [],
-  "version": "0.1.0"
+  "platforms": [],
+  "version": "0.1.1",
+  "frontend": {
+    "javascript": [
+      "www/llm-recording-card.js"
+    ]
+  }
+
 }

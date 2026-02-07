@@ -221,41 +221,23 @@ async def async_setup(hass: HomeAssistant, config: dict):
         from homeassistant.components.lovelace import add_resource
         from homeassistant.components.lovelace.const import RESOURCE_TYPE_MODULE
         
-        # Add a cache buster to ensure browser re-fetches
         import time
         timestamp = int(time.time())
-        # URL must match the static path registered above
         card_url = f"/llm_home_assistant/llm-card.js?v={timestamp}"
-        
-        # Try to use the modern async_add_resource if available (it might not be exported directly)
-        # Or use the resources collection if accessible.
-        
-        # Actually, the best way is via the Lovelace resources storage
-        from homeassistant.components.lovelace import resources
-        
-        # Force load resources
-        if hasattr(resources, "async_get_resources"):
-            # Modern way via storage
-            # But this is internal API...
-            pass
-            
-        # Let's use the add_extra_js_url as a fallback for "loading" it,
-        # but real registration happens in Lovelace settings > Resources.
-        # However, we can try to inject it.
-        
+        recording_card_url = f"/llm_home_assistant/llm-recording-card.js?v={timestamp}"
         from homeassistant.components.frontend import add_extra_module_url
         add_extra_module_url(hass, card_url)
-        _LOGGER.info(f"Registered frontend card (Module): {card_url}")
+        add_extra_module_url(hass, recording_card_url)
+        _LOGGER.info(f"Registered frontend cards (Module): {card_url}, {recording_card_url}")
             
     except ImportError:
-        # Fallback to older method
         try:
-             from homeassistant.components.frontend import add_extra_js_url
-             add_extra_js_url(hass, card_url)
-             _LOGGER.info(f"Registered frontend card (JS): {card_url}")
+            from homeassistant.components.frontend import add_extra_js_url
+            add_extra_js_url(hass, card_url)
+            add_extra_js_url(hass, recording_card_url)
+            _LOGGER.info(f"Registered frontend cards (JS): {card_url}, {recording_card_url}")
         except Exception as e:
-             _LOGGER.warning(f"Could not register extra JS: {e}")
-             
+            _LOGGER.warning(f"Could not register extra JS: {e}")
     except Exception as e:
         _LOGGER.warning(f"Error registering frontend resource: {e}")
 
@@ -265,6 +247,272 @@ async def async_setup(hass: HomeAssistant, config: dict):
     # NOTE: Sidebar panel registration is deliberately removed
     # per user request. The card should be added manually to
     # the Overview dashboard.
+
+     # ======================================================
+    #STT/TTS set up
+    # ======================================================
+    config_dir_2 = hass.config.config_dir
+    debug_path = os.path.join(
+    config_dir_2, 
+    "custom_components", 
+    DOMAIN, 
+    "_texts",
+    "debuggin_text.txt")
+
+    def _write_file(path: str, content: str, mode: str = "a") -> None:
+        with open(path, mode, encoding="utf-8") as f:
+            f.write(content)
+
+    def _start_recording_service(call: ServiceCall):
+        _LOGGER.info("=== START_RECORDING SERVICE ===")
+        from time import time
+        try:
+            _write_file(debug_path, f"Recording starte : {time()}\n")
+        except Exception as e:
+            _LOGGER.debug("Debug write failed: %s", e)
+        try:
+            from .text_audio_processing import start_recording
+            result = start_recording()
+            _LOGGER.info(f"Recording started: {result}")
+            
+            
+        except Exception as e:
+            _LOGGER.error(f"Failed to start recording: {e}")
+
+    hass.services.async_register(
+        DOMAIN,
+        "start_recording",
+        _start_recording_service,
+        schema=vol.Schema({})
+    )
+
+    # Register stop_recording service
+    async def _stop_recording_service(call: ServiceCall):
+        _LOGGER.info("=== STOP_RECORDING SERVICE ===")
+        
+        try:
+            from .text_audio_processing import stop_recording
+            result = stop_recording()
+            _LOGGER.info(f"Recording stopped: {result}")
+            if result.get("status") == "not_recording":
+                _LOGGER.warning("Stop called but no recording was in progress; skipping transcribe.")
+                return
+            from asyncio import sleep
+            await sleep(1.0)
+            from time import time
+            await hass.async_add_executor_job(_write_file, debug_path, f"Recording stopped : {time()}\n")
+            if not result.get("success"):
+                _LOGGER.warning("Recording stopped but no audio file was created; skipping transcribe.")
+                return
+            hass.async_create_task(
+                hass.services.async_call(
+                    DOMAIN,
+                    "transcribe_audio",
+                    {"filename": "current_request.wav"}
+                )
+            )
+        except Exception as e:
+            _LOGGER.error(f"Failed to stop recording: {e}")
+
+    hass.services.async_register(
+        DOMAIN,
+        "stop_recording",
+        _stop_recording_service,
+        schema=vol.Schema({})
+    )
+
+    async def _transcribe_and_store(call):
+        
+        if DOMAIN not in hass.data:
+            _LOGGER.warning(f"hass.data[{DOMAIN}] not found, initializing now")
+            hass.data[DOMAIN] = {"default_model": "openai"}
+        
+
+        # Check if recording actually happened
+        
+        filename = call.data.get("filename")
+        if not filename:
+            _LOGGER.error("No filename provided for transcribe_audio")
+            return
+        
+        config_dir = hass.config.config_dir
+        audio_path = os.path.join(
+        config_dir, 
+        "custom_components", 
+        DOMAIN, 
+        "_audios",
+        filename)
+        
+        _LOGGER.info(f"Looking for audio file at: {audio_path}")
+
+        if not os.path.exists(audio_path):
+            _LOGGER.error(f"File does not exist: {audio_path}")
+            # Check if recording actually happened
+            from .text_audio_processing import is_recording
+            if is_recording():
+                _LOGGER.warning("Recording is still in progress! Wait for it to finish.")
+            return
+        
+        try:
+            size = os.path.getsize(audio_path)
+
+            _LOGGER.info(f"Audio file size: {size} bytes")
+            await hass.async_add_executor_job(_write_file, debug_path, f"Audio file size: {size} bytes\n")
+
+            from .text_audio_processing import stt_whisper
+            from time import time
+            await hass.async_add_executor_job(_write_file, debug_path, f"CAlling transcribe : {time()}\n")
+            text = await hass.async_add_executor_job(stt_whisper, audio_path)
+            await hass.async_add_executor_job(_write_file, debug_path, "***" + text + "+++\n")
+            await hass.async_add_executor_job(_write_file, debug_path, f"finish transcribed : {time()}\n")
+            
+            #save transcription to HA state
+            hass.states.async_set(DOMAIN+".last_transcription", text)
+            
+            _LOGGER.info(f"Transcription successful: {text}")
+            
+            # Call LLM chat service with transcribed text and model
+            model_entity_id = "select.llm_model_select"
+            # Get model - FIX: Check if entity exists
+            model_state = hass.states.get(model_entity_id)
+            selected_model = hass.data[DOMAIN].get("default_model", "openai")  # fallback
+            model_entity_id = "select.llm_model_select"
+            model_state = hass.states.get(model_entity_id)
+            
+            if model_state and model_state.state:
+                selected_model = model_state.state
+                _LOGGER.info(f"Using selected model: {selected_model}")
+            else:
+                # DEBUG: Check hass.data before accessing
+                _LOGGER.info(f"hass.data.get('{DOMAIN}'): {hass.data.get(DOMAIN)}")
+            
+            from time import time
+            await hass.async_add_executor_job(_write_file, debug_path, f"calling calling model with: {text}\ncalling caht model at : {time()}\n")
+            await hass.services.async_call(
+                DOMAIN,
+                "chat",
+                {
+                    "text": text,
+                    "model": selected_model
+                },
+                blocking=True
+            )
+            await hass.async_add_executor_job(_write_file, debug_path, f"LLM processing started with model: {selected_model}\ncalling caht ended at : {time()}\n")
+            _LOGGER.info("LLM chat service called with transcription")
+            # Path to the text file in _texts folder
+            text_file = os.path.join(
+                hass.config.config_dir,
+                "custom_components",
+                DOMAIN,
+                "_texts",
+                "response_text.txt"
+            )
+
+            entity_id = "sensor.llm_model_response"
+            state_obj = hass.states.get(entity_id)
+            state_str = state_obj.state if state_obj else "no sensor data"
+
+            try:
+                await hass.async_add_executor_job(_write_file, text_file, state_str, "w")
+                _LOGGER.info("Saved sensor state to %s: %s", text_file, state_str)
+            except Exception as e:
+                _LOGGER.error("Error writing sensor state to file: %s", e)
+            
+            # Schedule the async TTS fallback service
+            await hass.services.async_call(
+            DOMAIN,
+            "tts_fallback",
+            {},
+            blocking=False)
+            _LOGGER.info("Called async TTS fallback service")
+            
+        except Exception as e:
+            _LOGGER.error(f"Error during transcription: {e}")
+            _LOGGER.error(f"Error type: {type(e).__name__}")
+            _LOGGER.error(f"Error message: {str(e)}")
+            _LOGGER.error("Full traceback:", exc_info=True)
+            return
+
+    hass.services.async_register(
+        DOMAIN,
+        "transcribe_audio",
+        _transcribe_and_store,
+        schema=vol.Schema({vol.Optional("filename", default="current_request.wav",description="Filename in _audios folder"): cv.string})
+        )
+
+    async def _async_tts_fallback_service(call: ServiceCall):
+        """Async service that reads text from file and uses TTS with fallback."""
+        _LOGGER.info("=== TTS FALLBACK SERVICE ===")
+        
+        try:
+            # Get text from file
+            config_dir = hass.config.config_dir
+            text_path = os.path.join(
+                config_dir, 
+                "custom_components", 
+                DOMAIN, 
+                "_texts",
+                "response_text.txt"
+            )
+            
+            # Read the text file asynchronously
+            if not await hass.async_add_executor_job(os.path.exists, text_path):
+                _LOGGER.error(f"Text file not found: {text_path}")
+                return
+                
+            def read_file():
+                with open(text_path, 'r') as f:
+                    return f.read().strip()
+            
+            text = await hass.async_add_executor_job(read_file)
+            
+            if not text:
+                _LOGGER.warning("Text file is empty")
+                text = "There was no reponse from model"
+                
+            _LOGGER.info(f"Read text from file ({len(text)} chars): {text[:100]}...")
+            
+            # Import TTS functions
+            from .text_audio_processing import tts_google, tts_espeak
+            
+            # Try Google TTS first
+            try:
+                _LOGGER.info("Attempting Google TTS...")
+                
+                # If tts_google is a blocking function, run it in executor
+                result = await hass.async_add_executor_job(tts_google, text)
+                # If tts_google is async: result = await tts_google(text)
+                
+                _LOGGER.info(f"Google TTS successful: {result}")
+                
+            except Exception as google_error:
+                _LOGGER.warning(f"Google TTS failed: {google_error}")
+                _LOGGER.info("Falling back to eSpeak TTS...")
+                
+                # Fallback to eSpeak
+                try:
+                    # If tts_espeak is a blocking function
+                    result = await hass.async_add_executor_job(tts_espeak, text)
+                    # If tts_espeak is async: result = await tts_espeak(text)
+                    
+                    _LOGGER.info(f"eSpeak TTS successful: {result}")
+                    
+                except Exception as espeak_error:
+                    _LOGGER.error(f"Both TTS methods failed. eSpeak error: {espeak_error}")
+                    raise
+            
+        except Exception as e:
+            _LOGGER.error(f"TTS fallback service failed: {e}")
+    
+    # Register the async fallback service
+    hass.services.async_register(
+        DOMAIN, 
+        "tts_fallback",
+        _async_tts_fallback_service,
+        schema=vol.Schema({})
+    )
+    
+    _LOGGER.info("LLM Home Assistant integration setup complete")
 
     return True
 
@@ -331,3 +579,45 @@ async def _create_helpers(hass: HomeAssistant):
             _LOGGER.info("Created input_select.llm_model")
         except Exception as e:
             _LOGGER.warning(f"Could not create input_select: {e}")
+
+
+async def async_setup_entry(hass, config):
+    from .switch import AudioRecordingSwitch
+    from .select import LLMModelSelect
+
+    # Initialize hass.data[DOMAIN]
+    hass.data.setdefault(DOMAIN, {})
+    
+    # Create and register the select entity
+    select = LLMModelSelect(hass)
+    await select.async_added_to_hass()
+    
+    # entity is available immediately
+    hass.states.async_set(
+    "select.llm_model_select",
+    "openai",
+    {
+        "friendly_name": "LLM Model",
+        "options": ["openai", "llama3.3"],
+        "icon": "mdi:robot"
+    }
+    )
+    
+    # Store in hass.data
+    hass.data[DOMAIN]["select"] = select
+
+    switch = AudioRecordingSwitch(hass)
+    await switch.async_added_to_hass()
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN]["switch"] = switch
+    
+    # Register the select
+    
+    select = LLMModelSelect(hass)
+    await select.async_added_to_hass()
+    hass.data[DOMAIN]["select"] = select
+    return True
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return True
