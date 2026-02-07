@@ -27,3 +27,15 @@ chat:
       selector:
         object:
 
+process_realtime_audio:
+  name: Process Realtime Audio
+  description: Process a recorded audio file with OpenAI Realtime API; tool calls are executed in Home Assistant.
+  fields:
+    filename:
+      name: Filename
+      description: Filename in the _audios folder (e.g. current_request.wav).
+      required: false
+      default: current_request.wav
+      selector:
+        text:
+

@@ -216,30 +216,37 @@ async def async_setup(hass: HomeAssistant, config: dict):
         _LOGGER.warning(f"Error registering static paths: {e}")
 
     # 2. Register the card as a Lovelace resource
-    # This tells Lovelace where to find the custom card
+    import time
+    _ts = int(time.time())
+    card_url = f"/llm_home_assistant/llm-card.js?v={_ts}"
+    recording_card_url = f"/llm_home_assistant/llm-recording-card.js?v={_ts}"
+    realtime_card_url = f"/llm_home_assistant/llm-realtime-audio-card.js?v={_ts}"
+
     try:
-        from homeassistant.components.lovelace import add_resource
-        from homeassistant.components.lovelace.const import RESOURCE_TYPE_MODULE
-        
-        import time
-        timestamp = int(time.time())
-        card_url = f"/llm_home_assistant/llm-card.js?v={timestamp}"
-        recording_card_url = f"/llm_home_assistant/llm-recording-card.js?v={timestamp}"
         from homeassistant.components.frontend import add_extra_module_url
         add_extra_module_url(hass, card_url)
         add_extra_module_url(hass, recording_card_url)
-        _LOGGER.info(f"Registered frontend cards (Module): {card_url}, {recording_card_url}")
-            
+        add_extra_module_url(hass, realtime_card_url)
+        _LOGGER.info("Registered frontend cards: llm-card, llm-recording-card, llm-realtime-audio-card")
     except ImportError:
         try:
             from homeassistant.components.frontend import add_extra_js_url
             add_extra_js_url(hass, card_url)
             add_extra_js_url(hass, recording_card_url)
-            _LOGGER.info(f"Registered frontend cards (JS): {card_url}, {recording_card_url}")
+            add_extra_js_url(hass, realtime_card_url)
+            _LOGGER.info("Registered frontend cards (legacy): llm-card, llm-recording-card, llm-realtime-audio-card")
         except Exception as e:
-            _LOGGER.warning(f"Could not register extra JS: {e}")
+            _LOGGER.warning("Could not register extra JS: %s", e)
     except Exception as e:
-        _LOGGER.warning(f"Error registering frontend resource: {e}")
+        _LOGGER.warning("Error registering frontend resource: %s", e)
+
+    try:
+        from homeassistant.components.lovelace import add_resource
+        from homeassistant.components.lovelace.const import RESOURCE_TYPE_MODULE
+        add_resource(hass, realtime_card_url, RESOURCE_TYPE_MODULE)
+        _LOGGER.info("Added realtime audio card to Lovelace resources: %s", realtime_card_url)
+    except (ImportError, AttributeError, TypeError) as e:
+        _LOGGER.debug("Could not add Lovelace resource (add resource manually in Settings > Dashboards > Resources): %s", e)
 
     # ======================================================
     # Register Sidebar Panel
@@ -289,28 +296,29 @@ async def async_setup(hass: HomeAssistant, config: dict):
     # Register stop_recording service
     async def _stop_recording_service(call: ServiceCall):
         _LOGGER.info("=== STOP_RECORDING SERVICE ===")
-        
+        pipeline = call.data.get("pipeline", "transcribe")
         try:
             from .text_audio_processing import stop_recording
             result = stop_recording()
             _LOGGER.info(f"Recording stopped: {result}")
             if result.get("status") == "not_recording":
-                _LOGGER.warning("Stop called but no recording was in progress; skipping transcribe.")
+                _LOGGER.warning("Stop called but no recording was in progress; skipping pipeline.")
                 return
             from asyncio import sleep
             await sleep(1.0)
             from time import time
             await hass.async_add_executor_job(_write_file, debug_path, f"Recording stopped : {time()}\n")
             if not result.get("success"):
-                _LOGGER.warning("Recording stopped but no audio file was created; skipping transcribe.")
+                _LOGGER.warning("Recording stopped but no audio file was created; skipping pipeline.")
                 return
-            hass.async_create_task(
-                hass.services.async_call(
-                    DOMAIN,
-                    "transcribe_audio",
-                    {"filename": "current_request.wav"}
+            if pipeline != "realtime":
+                hass.async_create_task(
+                    hass.services.async_call(
+                        DOMAIN,
+                        "transcribe_audio",
+                        {"filename": "current_request.wav"}
+                    )
                 )
-            )
         except Exception as e:
             _LOGGER.error(f"Failed to stop recording: {e}")
 
@@ -318,7 +326,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         DOMAIN,
         "stop_recording",
         _stop_recording_service,
-        schema=vol.Schema({})
+        schema=vol.Schema({vol.Optional("pipeline", default="transcribe"): cv.string})
     )
 
     async def _transcribe_and_store(call):
@@ -439,6 +447,38 @@ async def async_setup(hass: HomeAssistant, config: dict):
         _transcribe_and_store,
         schema=vol.Schema({vol.Optional("filename", default="current_request.wav",description="Filename in _audios folder"): cv.string})
         )
+
+    async def _process_realtime_audio_service(call: ServiceCall):
+        """Process recorded audio with OpenAI Realtime API and execute tool calls."""
+        _LOGGER.info("=== PROCESS_REALTIME_AUDIO SERVICE ===")
+        filename = call.data.get("filename", "current_request.wav")
+        config_dir = hass.config.config_dir
+        audio_path = os.path.join(config_dir, "custom_components", DOMAIN, "_audios", filename)
+        if not os.path.isfile(audio_path):
+            _LOGGER.error("Realtime audio file not found: %s", audio_path)
+            return
+        data_store = hass.data.get(DOMAIN, {})
+        api_key = data_store.get("openai_api_key")
+        if not api_key:
+            _LOGGER.error("No OpenAI API key; cannot run Realtime API")
+            return
+        allow_cfg = data_store.get("allow_cfg")
+        try:
+            from .models.openai.call_realtime_audio import process_realtime_audio
+            result = await process_realtime_audio(hass, api_key, audio_path, allow_cfg)
+            _LOGGER.info("Realtime audio result: %s", result.get("explanation", "")[:200])
+            response_text_path = os.path.join(config_dir, "custom_components", DOMAIN, "_texts", "response_text.txt")
+            await hass.async_add_executor_job(_write_file, response_text_path, result.get("explanation", ""), "w")
+            await hass.services.async_call(DOMAIN, "tts_fallback", {}, blocking=False)
+        except Exception as e:
+            _LOGGER.exception("process_realtime_audio failed: %s", e)
+
+    hass.services.async_register(
+        DOMAIN,
+        "process_realtime_audio",
+        _process_realtime_audio_service,
+        schema=vol.Schema({vol.Optional("filename", default="current_request.wav"): cv.string}),
+    )
 
     async def _async_tts_fallback_service(call: ServiceCall):
         """Async service that reads text from file and uses TTS with fallback."""

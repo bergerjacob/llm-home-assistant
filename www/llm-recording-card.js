@@ -181,5 +181,7 @@ class LLMRecordingCard extends HTMLElement {
   }
 }
 
-customElements.define('llm-my-recording-card', LLMRecordingCard);
+if (!customElements.get('llm-my-recording-card')) {
+  customElements.define('llm-my-recording-card', LLMRecordingCard);
+}
 console.log("LLM Recording Card ready!");

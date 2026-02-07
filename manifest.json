@@ -5,13 +5,14 @@
   "documentation": "https://github.com/...",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/...",
-  "requirements": [],
+  "requirements": ["websockets"],
   "platforms": [],
   "version": "0.1.1",
   "frontend": {
     "javascript": [
-      "www/llm-recording-card.js"
+      "www/llm-card.js",
+      "www/llm-recording-card.js",
+      "www/llm-realtime-audio-card.js"
     ]
   }
-
 }

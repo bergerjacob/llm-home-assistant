@@ -282,7 +282,9 @@ class LLMCard extends HTMLElement {
   }
 }
 
-customElements.define('llm-card', LLMCard);
+if (!customElements.get('llm-card')) {
+  customElements.define('llm-card', LLMCard);
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({
