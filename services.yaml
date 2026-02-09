@@ -27,3 +27,10 @@ chat:
       selector:
         object:
 
+process_audio_direct:
+  name: Process Audio Direct
+  description: >-
+    Send the recorded WAV file directly to gpt-4o-audio-preview in a single
+    API call, bypassing the whisper.cpp transcription step. Called automatically
+    by stop_recording.
+

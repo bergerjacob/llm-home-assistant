@@ -1,0 +1,13 @@
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: ghcr.io/home-assistant/home-assistant:2025.1.4
+    volumes:
+      - ./ha_config:/config
+      - .:/config/custom_components/llm_home_assistant
+    environment:
+      - TZ=America/Los_Angeles
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    ports:
+      - "8123:8123"
+    restart: unless-stopped

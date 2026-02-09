@@ -1,5 +1,3 @@
 *.pyc
-cache_stats.json
-
-_audios/
-_texts/
+ha_config/
+.env
