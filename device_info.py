@@ -2,13 +2,173 @@
 Module to gather device states and available services from Home Assistant.
 Similar to what Paul from The Home Assistant library does.
 """
+import json
 import logging
+import re
+import time
 from typing import Dict, List, Any
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import template
 import voluptuous as vol
 from voluptuous.schema_builder import Marker
 
 _LOGGER = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# TTL cache for compact context (2-second), keyed per hass instance
+# ---------------------------------------------------------------------------
+_compact_caches: dict[int, dict[str, Any]] = {}
+
+# Exclusion patterns (mirrored from call_openai.py to avoid circular import)
+_EXCLUDED_STATE_DOMAINS = {"zone", "update", "sun", "event"}
+_EXCLUDED_ENTITY_PATTERNS = [
+    r".*\.llm_.*",
+    r".*\.backup_.*",
+    r".*_identify(_[0-9]+)?$",
+    r".*_firmware(_[0-9]+)?$",
+    r".*_transition_time(_[0-9]+)?$",
+    r".*_on_level(_[0-9]+)?$",
+    r".*_start_up_.*",
+    r".*_behavior(_[0-9]+)?$",
+    r".*_current_level(_[0-9]+)?$",
+    r".*_color_temperature(_[0-9]+)?$",
+    r".*_delay_time(_[0-9]+)?$",
+]
+_COMPILED_PATTERNS = [re.compile(p) for p in _EXCLUDED_ENTITY_PATTERNS]
+
+
+def fetch_entity_areas(hass: HomeAssistant) -> dict[str, str]:
+    """Fetch entity area/room names via a Home Assistant template.
+
+    Must be called from the event loop (uses async_render).
+    """
+    template_str = """
+{% set ns = namespace(items=[]) %}
+{% for s in states %}
+  {% set a = area_name(s.entity_id) %}
+  {% if a %}
+    {% set ns.items = ns.items + [[s.entity_id, a]] %}
+  {% endif %}
+{% endfor %}
+{
+{% for item in ns.items %}
+  {{ item[0] | to_json }}: {{ item[1] | to_json }}{% if not loop.last %},{% endif %}
+{% endfor %}
+}
+"""
+    try:
+        tmpl = template.Template(template_str, hass)
+        rendered = tmpl.async_render(parse_result=False)
+        return json.loads(rendered)
+    except Exception as e:
+        _LOGGER.warning("Failed to fetch areas via template: %s", e)
+        return {}
+
+
+def _cfg_hash(allow_cfg: dict | None) -> str:
+    """Quick hash of allow_cfg for cache invalidation.
+
+    Uses default=str so non-JSON-serializable values (sets, custom objects)
+    don't crash the hash — they just get a str() representation.
+    """
+    if not allow_cfg:
+        return ""
+    return json.dumps(allow_cfg, sort_keys=True, default=str)
+
+
+def _entity_to_compact(entity_id: str, state, attrs: dict, area: str | None) -> dict:
+    """Build a compact dict for a single entity."""
+    domain = entity_id.split(".")[0]
+    c: dict[str, Any] = {
+        "e": entity_id,
+        "n": attrs.get("friendly_name", entity_id),
+        "d": domain,
+        "s": state,
+    }
+
+    if domain == "light":
+        c["b"] = attrs.get("brightness")
+        cm = attrs.get("supported_color_modes", [])
+        if cm:
+            c["cm"] = cm
+        if "color" in (cm or []) or "hs" in (cm or []) or "rgb" in (cm or []) or "xy" in (cm or []):
+            c["c"] = 1
+    elif domain == "cover":
+        c["pos"] = attrs.get("current_position")
+    elif domain == "climate":
+        c["mode"] = attrs.get("hvac_mode")
+        c["cur_t"] = attrs.get("current_temperature")
+        c["tgt_t"] = attrs.get("temperature")
+    elif domain == "binary_sensor":
+        dc = attrs.get("device_class")
+        if dc:
+            c["dc"] = dc
+
+    if area:
+        c["area"] = area
+
+    return c
+
+
+def build_compact_context(hass: HomeAssistant, allow_cfg: dict | None) -> str:
+    """
+    Build a compact JSON context of entities + allowed services.
+    Uses a 2-second TTL cache keyed per hass instance.
+    MUST be called from the event loop.
+    """
+    hass_key = id(hass)
+    cache = _compact_caches.get(hass_key, {"data": "", "ts": 0.0, "cfg_hash": ""})
+
+    cfg_h = _cfg_hash(allow_cfg)
+    now = time.monotonic()
+    if cache["data"] and (now - cache["ts"] < 2.0) and cache["cfg_hash"] == cfg_h:
+        _LOGGER.debug("Compact context cache hit (age=%.2fs)", now - cache["ts"])
+        return cache["data"]
+
+    allow_cfg = allow_cfg or {}
+    allowed_domains = set(allow_cfg.get("domains") or [])
+    allowed_entities = set(allow_cfg.get("entities") or [])
+    allowed_services_list = allow_cfg.get("services") or []
+
+    areas = fetch_entity_areas(hass)
+
+    entities: list[dict] = []
+    for s in hass.states.async_all():
+        eid = s.entity_id
+        domain = eid.split(".")[0]
+
+        # Domain filter from allowlist
+        if allowed_domains and domain not in allowed_domains:
+            continue
+        # Entity filter from allowlist
+        if allowed_entities and eid not in allowed_entities:
+            continue
+        # System domain exclusions
+        if domain in _EXCLUDED_STATE_DOMAINS:
+            continue
+        # Pattern exclusions
+        if any(p.match(eid) for p in _COMPILED_PATTERNS):
+            continue
+        # Skip sun.sun
+        if eid == "sun.sun":
+            continue
+
+        attrs = dict(s.attributes) if s.attributes else {}
+        entities.append(_entity_to_compact(eid, s.state, attrs, areas.get(eid)))
+
+    # Build allowed services map: {"light": ["turn_on", "turn_off"], ...}
+    svc_map: dict[str, list[str]] = {}
+    for full_svc in allowed_services_list:
+        parts = full_svc.split(".", 1)
+        if len(parts) == 2:
+            svc_map.setdefault(parts[0], []).append(parts[1])
+
+    context = {"entities": entities, "services": svc_map}
+    result = json.dumps(context, separators=(",", ":"))
+
+    _compact_caches[hass_key] = {"data": result, "ts": now, "cfg_hash": cfg_h}
+    _LOGGER.info("Built compact context: %d entities, %d chars", len(entities), len(result))
+    return result
 
 
 async def get_all_device_states(hass: HomeAssistant) -> List[Dict[str, Any]]:

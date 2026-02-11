@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from .call_openai import (
     Action,
     Plan,
-    build_hass_context,
     _save_cache_stats,
 )
 from .tool_defs import PROPOSE_ACTIONS_TOOL
@@ -30,10 +29,16 @@ The user is speaking a command. Understand their spoken request and call the
 `propose_actions` tool with the appropriate Home Assistant service calls.
 
 Rules:
+- IMPORTANT: Use specific domain services like `light.turn_on`, NOT `homeassistant.turn_on`.
+- Batch multiple targets into one action with an entity_id list when they share the same service and data.
+- entity_id can be a single string or a list of strings.
+- Max 3 actions per request. Prefer 1. Keep explanation under 15 words.
 - Only use entity_ids and services that appear in the context below.
 - If the user asks about state, return empty actions and explain current state.
 - For ambiguous names, pick the closest match from the entity list.
 - Always provide an explanation.
+
+Context key: e=entity_id, n=name, d=domain, s=state, b=brightness, cm=color_modes, c=supports_color, pos=position, area=room.
 
 HOME ASSISTANT CONTEXT:
 {context}"""
@@ -141,12 +146,16 @@ async def async_query_openai_audio(
     audio_b64: str,
     audio_format: str,
     user_text: str | None = None,
+    allow_cfg: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Async entry-point: send audio directly to gpt-4o-audio-preview."""
     _LOGGER.debug("Preparing audio call (model: %s)", AUDIO_MODEL)
 
+    # Build compact context on the event loop (uses async_all / async_render)
     try:
-        hass_context_text = await build_hass_context(hass)
+        from ...device_info import build_compact_context
+        hass_context_text = build_compact_context(hass, allow_cfg)
+        _LOGGER.info("Compact context size: %d chars", len(hass_context_text))
     except Exception as exc:
         _LOGGER.error("Failed to build HA context: %s", exc)
         return {"actions": [], "explanation": f"Failed to build HA context: {exc}"}
