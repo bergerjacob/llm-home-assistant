@@ -175,7 +175,12 @@ def _save_cache_stats(usage_info: dict[str, Any]) -> None:
         if os.path.exists(stats_path):
             try:
                 with open(stats_path, "r", encoding="utf-8") as f:
-                    existing_stats = json.load(f)
+                    raw = json.load(f)
+                # Handle both formats: list or {"history": [...]}
+                if isinstance(raw, list):
+                    existing_stats = raw
+                elif isinstance(raw, dict):
+                    existing_stats = raw.get("history", [])
             except Exception as e:
                 _LOGGER.warning("Failed to load existing cache stats: %s", e)
         
