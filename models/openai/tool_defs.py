@@ -26,8 +26,11 @@ PROPOSE_ACTIONS_TOOL = {
                                 "description": "Service name, e.g. 'turn_on'.",
                             },
                             "entity_id": {
-                                "type": "string",
-                                "description": "Target entity, e.g. 'light.kitchen'.",
+                                "description": "Target entity or list of entities.",
+                                "oneOf": [
+                                    {"type": "string"},
+                                    {"type": "array", "items": {"type": "string"}},
+                                ],
                             },
                             "data": {
                                 "type": "object",

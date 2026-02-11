@@ -14,7 +14,6 @@ import aiohttp
 from pydantic import BaseModel, Field
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import template
 from homeassistant.helpers.service import async_get_all_descriptions
 
 _LOGGER = logging.getLogger(__name__)
@@ -137,35 +136,12 @@ async def fetch_services(hass: HomeAssistant) -> list[Dict[str, Any]]:
     return result
 
 
-def fetch_entity_areas(hass: HomeAssistant) -> Dict[str, str]:
-    """Fetch entity area/room names via a Home Assistant template."""
-    template_str = """
-{% set ns = namespace(items=[]) %}
-{% for s in states %}
-  {% set a = area_name(s.entity_id) %}
-  {% if a %}
-    {% set ns.items = ns.items + [[s.entity_id, a]] %}
-  {% endif %}
-{% endfor %}
-{
-{% for item in ns.items %}
-  {{ item[0] | to_json }}: {{ item[1] | to_json }}{% if not loop.last %},{% endif %}
-{% endfor %}
-}
-"""
-    try:
-        tmpl = template.Template(template_str, hass)
-        rendered = tmpl.async_render(parse_result=False)
-        return json.loads(rendered)
-    except Exception as e:
-        _LOGGER.warning("Failed to fetch areas via template: %s", e)
-        return {}
-
-
 async def build_hass_context(hass: HomeAssistant) -> str:
     """
     Build a simple JSON snapshot of states + services for the model.
     """
+    from ...device_info import fetch_entity_areas
+
     states = fetch_states(hass)
     services = await fetch_services(hass)
     areas = fetch_entity_areas(hass)
@@ -283,23 +259,25 @@ def _blocking_gpt_call(
         "Respond ONLY with valid JSON.\n\n"
         "The JSON MUST have this exact shape:\n"
         "{\n"
-        '  \"actions\": [\n'
+        '  "actions": [\n'
         "    {\n"
-        '      \"domain\": \"light\",\n'
-        '      \"service\": \"turn_on\",\n'
-        '      \"entity_id\": \"light.living_room\",\n'
-        '      \"data\": {\"brightness\": 220}\n'
-        "    },\n"
-        "    ... one object per requested action ...\n"
+        '      "domain": "light",\n'
+        '      "service": "turn_on",\n'
+        '      "entity_id": ["light.room1", "light.room2"],\n'
+        '      "data": {"brightness": 220}\n'
+        "    }\n"
         "  ],\n"
-        '  \"explanation\": \"Human-readable summary of what you did\"\n'
+        '  "explanation": "Short summary"\n'
         "}\n\n"
-        "IMPORTANT: The 'entity_id' field can be either:\n"
-        "- A single string: \"light.living_room\"\n"
-        "- A list of strings: [\"light.room1\", \"light.room2\"] (for multiple entities)\n\n"
-        "Use only domains / services / entity_ids that exist in the "
-        "Home Assistant context below.\n\n"
-        f"HOME ASSISTANT CONTEXT (states + services):\n{hass_context_text}"
+        "RULES:\n"
+        "- IMPORTANT: Use specific domain services like `light.turn_on`, NOT `homeassistant.turn_on`.\n"
+        "- Batch multiple targets into one action with an entity_id list when they share the same service and data.\n"
+        "- entity_id can be a single string or a list of strings.\n"
+        "- Max 3 actions per request. Prefer 1. Keep explanation under 15 words.\n"
+        "- Use only entity_ids and services from the context below.\n\n"
+        "CONTEXT KEY: e=entity_id, n=name, d=domain, s=state, b=brightness, "
+        "cm=color_modes, c=supports_color, pos=position, area=room.\n\n"
+        f"HOME ASSISTANT CONTEXT:\n{hass_context_text}"
     )
 
     # Debug: Log system prompt length
@@ -373,6 +351,7 @@ async def async_query_openai(
     *,
     api_key: str,
     messages: list[dict[str, Any]],
+    allow_cfg: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Call OpenAI using the configured model and return a structured
@@ -380,9 +359,11 @@ async def async_query_openai(
     """
     _LOGGER.debug("Preparing OpenAI JSON-mode call (model: %s)", OPENAI_MODEL)
 
-    # Build the context dynamically (async)
+    # Build compact context on the event loop (uses async_all / async_render)
     try:
-        hass_context_text = await build_hass_context(hass)
+        from ...device_info import build_compact_context
+        hass_context_text = build_compact_context(hass, allow_cfg)
+        _LOGGER.info("Compact context size: %d chars", len(hass_context_text))
     except Exception as e:
         _LOGGER.error("Failed to build HA context: %s", e)
         return {

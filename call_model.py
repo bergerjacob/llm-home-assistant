@@ -6,6 +6,7 @@ querying the LLM, and executing the returned actions.
 import logging
 import os
 import json
+import time
 from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -18,6 +19,60 @@ from .audio_utils import validate_audio, encode_audio_base64, normalize_format
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "llm_home_assistant"
 
+
+def merge_actions(actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Merge actions that share the same domain, service, and data (ignoring entity_id).
+    Multiple entity_ids are collapsed into a single action with a list of entity_ids.
+    """
+    if not actions:
+        return actions
+
+    groups: dict[str, dict[str, Any]] = {}
+    order: list[str] = []
+
+    for action in actions:
+        domain = action.get("domain", "")
+        service = action.get("service", "")
+        data = action.get("data") or {}
+        entity_id = action.get("entity_id")
+
+        # Build a key from everything except entity_id (strip from data too,
+        # in case a malformed/fallback response put entity_id inside data).
+        data_for_key = {k: v for k, v in data.items() if k != "entity_id"}
+        key = f"{domain}.{service}:{json.dumps(data_for_key, sort_keys=True)}"
+
+        if key not in groups:
+            groups[key] = {
+                "domain": domain,
+                "service": service,
+                "data": data,
+                "_entity_ids": [],
+            }
+            order.append(key)
+
+        # Collect entity_ids (can be str or list)
+        if entity_id:
+            if isinstance(entity_id, list):
+                for eid in entity_id:
+                    if eid not in groups[key]["_entity_ids"]:
+                        groups[key]["_entity_ids"].append(eid)
+            else:
+                if entity_id not in groups[key]["_entity_ids"]:
+                    groups[key]["_entity_ids"].append(entity_id)
+
+    merged: list[dict[str, Any]] = []
+    for key in order:
+        g = groups[key]
+        eids = g.pop("_entity_ids")
+        if len(eids) == 1:
+            g["entity_id"] = eids[0]
+        elif len(eids) > 1:
+            g["entity_id"] = eids
+        merged.append(g)
+
+    return merged
+
 def _is_allowed(
     allow: dict[str, Any] | None,
     domain: str,
@@ -25,14 +80,16 @@ def _is_allowed(
     entity_id: str | list[str] | None,
 ) -> bool:
     """
-    Simple allowlist check for safety.
+    Fail-closed allowlist check for safety.
 
     allow can contain:
       - domains: list of allowed domains (e.g. ["light", "switch"])
       - services: list of allowed "<domain>.<service>" strings
       - entities: list of allowed entity_ids
 
-    If allow is None or empty, everything is allowed.
+    If allow is None or empty dict, everything is allowed (no restrictions).
+    If allow is provided, services MUST be explicitly listed; missing or empty
+    services list denies all service calls (fail-closed).
     """
     if not allow:
         return True
@@ -43,8 +100,18 @@ def _is_allowed(
 
     if domains and domain not in domains:
         return False
-    if services and f"{domain}.{service}" not in services:
+
+    # Fail-closed: if allow_cfg is in use, services must be explicitly listed.
+    if not services:
+        _LOGGER.warning(
+            "allow_cfg is active but 'services' is missing or empty — "
+            "denying %s.%s (add services to allow_cfg to fix)",
+            domain, service,
+        )
         return False
+    if f"{domain}.{service}" not in services:
+        return False
+
     if entities and entity_id:
         # Handle both single entity (str) and multiple entities (list)
         entity_list = entity_id if isinstance(entity_id, list) else [entity_id]
@@ -74,14 +141,16 @@ async def _execute_tool_call(hass: HomeAssistant, action: dict[str, Any], allow_
     # Handle entity_id (can be string or list of strings)
     if entity_id:
         if isinstance(entity_id, list):
-            # Multiple entities: validate all exist
-            for eid in entity_id:
-                if hass.states.get(eid) is None:
-                    _LOGGER.error("GPT requested unknown entity_id: %s", eid)
-                    return
+            valid = [eid for eid in entity_id if hass.states.get(eid) is not None]
+            invalid = set(entity_id) - set(valid)
+            if invalid:
+                _LOGGER.warning("Dropping unknown entity_ids: %s", invalid)
+            if not valid:
+                _LOGGER.error("No valid entity_ids remain for %s.%s", domain, service)
+                return
+            entity_id = valid if len(valid) > 1 else valid[0]
             data.setdefault(ATTR_ENTITY_ID, entity_id)
         else:
-            # Single entity: validate exists
             if hass.states.get(entity_id) is None:
                 _LOGGER.error("GPT requested unknown entity_id: %s", entity_id)
                 return
@@ -148,6 +217,7 @@ async def call_model_wrapper(
         return
 
     session = async_get_clientsession(hass)
+    t_start = time.monotonic()
 
     try:
         if audio_data is not None:
@@ -164,6 +234,7 @@ async def call_model_wrapper(
                 audio_b64=audio_b64,
                 audio_format=fmt,
                 user_text=text if text else None,
+                allow_cfg=allow_cfg,
             )
         else:
             # --- Existing text path ---
@@ -173,6 +244,7 @@ async def call_model_wrapper(
                 session=session,
                 api_key=openai_api_key,
                 messages=messages,
+                allow_cfg=allow_cfg,
             )
     except Exception as exc:
         _LOGGER.exception("OpenAI call failed: %s", exc)
@@ -183,8 +255,14 @@ async def call_model_wrapper(
         return
 
     # Expected: { "actions": [...], "explanation": "..." }
-    actions: list[dict[str, Any]] = reply.get("actions") or []
+    raw_actions: list[dict[str, Any]] = reply.get("actions") or []
+    actions = merge_actions(raw_actions)
     explanation: str = reply.get("explanation", "")
+
+    _LOGGER.info(
+        "Observability: actions_before_merge=%d, actions_after_merge=%d, elapsed=%.2fs",
+        len(raw_actions), len(actions), time.monotonic() - t_start,
+    )
 
     if explanation:
         _LOGGER.info("Assistant explanation: %s", explanation)
