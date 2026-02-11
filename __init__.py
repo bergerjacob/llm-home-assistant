@@ -307,8 +307,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
             hass.async_create_task(
                 hass.services.async_call(
                     DOMAIN,
-                    "transcribe_audio",
-                    {"filename": "current_request.wav"}
+                    "process_audio_direct",
+                    {}
                 )
             )
         except Exception as e:
@@ -439,6 +439,86 @@ async def async_setup(hass: HomeAssistant, config: dict):
         _transcribe_and_store,
         schema=vol.Schema({vol.Optional("filename", default="current_request.wav",description="Filename in _audios folder"): cv.string})
         )
+
+    # ======================================================
+    # Service handler: llm_home_assistant.process_audio_direct
+    # Sends recorded WAV directly to gpt-4o-audio-preview
+    # ======================================================
+    async def _process_audio_direct_service(call: ServiceCall):
+        _LOGGER.info("=== PROCESS_AUDIO_DIRECT SERVICE ===")
+
+        config_dir = hass.config.config_dir
+        audio_path = os.path.join(
+            config_dir,
+            "custom_components",
+            DOMAIN,
+            "_audios",
+            "current_request.wav",
+        )
+
+        if not await hass.async_add_executor_job(os.path.exists, audio_path):
+            _LOGGER.error("Audio file not found: %s", audio_path)
+            return
+
+        try:
+            def _read_wav():
+                with open(audio_path, "rb") as f:
+                    return f.read()
+
+            wav_bytes = await hass.async_add_executor_job(_read_wav)
+            size = len(wav_bytes)
+            _LOGGER.info("Read audio file: %s (%d bytes)", audio_path, size)
+
+            if size == 0:
+                _LOGGER.error("Audio file is empty")
+                return
+
+            # Call the model wrapper with audio data
+            await call_model_wrapper(
+                hass,
+                text="",
+                model_name="gpt-4o-audio-preview",
+                audio_data=wav_bytes,
+                audio_format="wav",
+            )
+
+            # Save response to state (same as transcribe_audio path)
+            entity_id = "sensor.llm_model_response"
+            state_obj = hass.states.get(entity_id)
+            state_str = state_obj.state if state_obj else "no sensor data"
+
+            hass.states.async_set(
+                DOMAIN + ".last_transcription",
+                "(audio-direct: transcription handled by model)",
+            )
+
+            # Write response text for TTS
+            text_file = os.path.join(
+                config_dir,
+                "custom_components",
+                DOMAIN,
+                "_texts",
+                "response_text.txt",
+            )
+            await hass.async_add_executor_job(_write_file, text_file, state_str, "w")
+            _LOGGER.info("Saved sensor state to %s", text_file)
+
+            # Call TTS
+            await hass.services.async_call(
+                DOMAIN, "tts_fallback", {}, blocking=False
+            )
+            _LOGGER.info("Called TTS fallback after audio-direct processing")
+
+        except Exception as e:
+            _LOGGER.error("Error in process_audio_direct: %s", e, exc_info=True)
+
+    hass.services.async_register(
+        DOMAIN,
+        "process_audio_direct",
+        _process_audio_direct_service,
+        schema=vol.Schema({}),
+    )
+    _LOGGER.info("Service 'process_audio_direct' registered")
 
     async def _async_tts_fallback_service(call: ServiceCall):
         """Async service that reads text from file and uses TTS with fallback."""

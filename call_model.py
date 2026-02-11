@@ -12,6 +12,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import ATTR_ENTITY_ID
 
 from .models.openai.call_openai import async_query_openai
+from .models.openai.call_openai_audio import async_query_openai_audio
+from .audio_utils import validate_audio, encode_audio_base64, normalize_format
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "llm_home_assistant"
@@ -114,40 +116,64 @@ async def _execute_tool_call(hass: HomeAssistant, action: dict[str, Any], allow_
         )
 
 
-async def call_model_wrapper(hass: HomeAssistant, text: str, model_name: str):
+async def call_model_wrapper(
+    hass: HomeAssistant,
+    text: str,
+    model_name: str,
+    *,
+    audio_data: bytes | None = None,
+    audio_format: str | None = None,
+):
     """
     Main wrapper to process the user request.
     1. Checks API key.
-    2. Calls LLM.
+    2. Calls LLM (text path or audio-direct path).
     3. Updates sensor/events.
     4. Executes actions.
     """
-    _LOGGER.info("Processing LLM request: %s (model: %s)", text, model_name)
+    _LOGGER.info("Processing LLM request: %s (model: %s, audio=%s)", text, model_name, audio_data is not None)
 
     # Retrieve configuration from hass.data
     data_store = hass.data.get(DOMAIN, {})
     openai_api_key = data_store.get("openai_api_key")
     allow_cfg = data_store.get("allow_cfg")
-    
+
     if not openai_api_key:
         _LOGGER.error("No OpenAI API key available; aborting OpenAI request.")
         return
 
     # Only process OpenAI requests through the OpenAI handler
-    if model_name not in ("openai", "gpt-4o", "gpt-4o-mini", "gpt-5-mini"):
+    if model_name not in ("openai", "gpt-4o", "gpt-4o-mini", "gpt-5-mini", "gpt-4o-audio-preview"):
         _LOGGER.warning("Model '%s' is not handled by OpenAI handler, skipping", model_name)
         return
 
-    messages = [{"role": "user", "content": text}]
     session = async_get_clientsession(hass)
 
     try:
-        reply = await async_query_openai(
-            hass=hass,
-            session=session,
-            api_key=openai_api_key,
-            messages=messages,
-        )
+        if audio_data is not None:
+            # --- Audio-direct path ---
+            fmt = normalize_format(audio_format or "wav")
+            validate_audio(audio_data, fmt)
+            audio_b64 = encode_audio_base64(audio_data)
+            _LOGGER.info("Audio-direct path: %d bytes, format=%s", len(audio_data), fmt)
+
+            reply = await async_query_openai_audio(
+                hass=hass,
+                session=session,
+                api_key=openai_api_key,
+                audio_b64=audio_b64,
+                audio_format=fmt,
+                user_text=text if text else None,
+            )
+        else:
+            # --- Existing text path ---
+            messages = [{"role": "user", "content": text}]
+            reply = await async_query_openai(
+                hass=hass,
+                session=session,
+                api_key=openai_api_key,
+                messages=messages,
+            )
     except Exception as exc:
         _LOGGER.exception("OpenAI call failed: %s", exc)
         # Update sensor with error
@@ -162,14 +188,14 @@ async def call_model_wrapper(hass: HomeAssistant, text: str, model_name: str):
 
     if explanation:
         _LOGGER.info("Assistant explanation: %s", explanation)
-        
+
         # Update sensor
         sensor_entity = data_store.get("sensor_entity")
         if sensor_entity:
             sensor_entity.update_response(explanation)
         else:
             _LOGGER.warning("Sensor entity not found, cannot update display")
-        
+
         # Fire event
         hass.bus.async_fire("llm_response_ready", {"payload": explanation})
 
