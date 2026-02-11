@@ -1,0 +1,19 @@
+{
+  "summary": {
+    "total_calls": 1,
+    "total_prompt_tokens": 20797,
+    "total_cached_tokens": 0,
+    "overall_cache_hit_rate": 0.0,
+    "last_cache_hit_rate": 0.0
+  },
+  "history": [
+    {
+      "timestamp": "2026-02-10T18:32:16.480437",
+      "prompt_tokens": 20797,
+      "cached_tokens": 0,
+      "completion_tokens": 80,
+      "total_tokens": 20877,
+      "cache_hit_rate": 0.0
+    }
+  ]
+}
