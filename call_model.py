@@ -39,7 +39,7 @@ _CACHEABLE_SERVICES = frozenset({
 
 def _cache_key(text: str, model_name: str, cfg_hash: str) -> str:
     """Build a short SHA-256 cache key."""
-    raw = text.strip().lower() + model_name + cfg_hash
+    raw = text.strip().lower() + (model_name or "") + cfg_hash
     return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
 
