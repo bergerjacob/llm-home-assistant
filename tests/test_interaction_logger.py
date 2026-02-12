@@ -15,15 +15,17 @@ _pkg = os.path.basename(_repo)
 if _parent not in sys.path:
     sys.path.insert(0, _parent)
 
-exec(f"from {_pkg}.interaction_logger import new_log_entry, write_log_entry, _LOG_DIR, _MAX_ENTRIES_PER_FILE, _MAX_DIR_SIZE_BYTES, _count_lines, _dir_size, _safe_serialize, _write_lock")
+exec(f"from {_pkg}.interaction_logger import new_log_entry, write_log_entry, _LOG_DIR, _MAX_ENTRIES_PER_FILE, _MAX_DIR_SIZE_BYTES, _count_entries, _dir_size, _safe_serialize, _write_lock")
 new_log_entry = locals()["new_log_entry"]
 write_log_entry = locals()["write_log_entry"]
-_count_lines = locals()["_count_lines"]
+_count_entries = locals()["_count_entries"]
 _dir_size = locals()["_dir_size"]
 _safe_serialize = locals()["_safe_serialize"]
 
 exec(f"import {_pkg}.interaction_logger as _mod")
 _mod = locals()["_mod"]
+
+_DEFAULT_LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_logs")
 
 
 # ===================================================================
@@ -38,7 +40,6 @@ class TestNewLogEntry:
 
     def test_timestamp_is_iso(self):
         entry = new_log_entry()
-        # Should parse without error
         from datetime import datetime
         datetime.fromisoformat(entry["timestamp"])
 
@@ -53,18 +54,17 @@ class TestNewLogEntry:
 
 
 # ===================================================================
-# write_log_entry — JSONL format
+# write_log_entry — pretty-printed JSON
 # ===================================================================
 
 class TestWriteLogEntry:
     def _redirect_log_dir(self, tmpdir):
-        """Point the module's _LOG_DIR at a temp directory."""
         _mod._LOG_DIR = str(tmpdir)
 
     def _restore_log_dir(self):
-        _mod._LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_logs")
+        _mod._LOG_DIR = _DEFAULT_LOG_DIR
 
-    def test_creates_jsonl_file(self, tmp_path):
+    def test_creates_json_file(self, tmp_path):
         self._redirect_log_dir(tmp_path)
         try:
             entry = new_log_entry()
@@ -74,7 +74,30 @@ class TestWriteLogEntry:
             files = list(tmp_path.iterdir())
             assert len(files) == 1
             assert files[0].name.startswith("interactions_")
-            assert files[0].name.endswith(".jsonl")
+            assert files[0].name.endswith(".json")
+        finally:
+            self._restore_log_dir()
+
+    def test_single_entry_is_valid_json(self, tmp_path):
+        self._redirect_log_dir(tmp_path)
+        try:
+            entry = new_log_entry()
+            entry["request"] = {"type": "text", "user_prompt": "test"}
+            write_log_entry(entry)
+
+            content = list(tmp_path.iterdir())[0].read_text()
+            obj = json.loads(content.strip())
+            assert obj["request"]["user_prompt"] == "test"
+        finally:
+            self._restore_log_dir()
+
+    def test_pretty_printed(self, tmp_path):
+        self._redirect_log_dir(tmp_path)
+        try:
+            write_log_entry(new_log_entry())
+            content = list(tmp_path.iterdir())[0].read_text()
+            # Pretty-printed JSON has multiple lines
+            assert content.count("\n") > 5
         finally:
             self._restore_log_dir()
 
@@ -88,24 +111,8 @@ class TestWriteLogEntry:
 
             files = list(tmp_path.iterdir())
             assert len(files) == 1
-            lines = files[0].read_text().strip().split("\n")
-            assert len(lines) == 3
-
-            for i, line in enumerate(lines):
-                obj = json.loads(line)
-                assert obj["request"]["index"] == i
-        finally:
-            self._restore_log_dir()
-
-    def test_each_line_is_valid_json(self, tmp_path):
-        self._redirect_log_dir(tmp_path)
-        try:
-            for _ in range(5):
-                write_log_entry(new_log_entry())
-
-            content = list(tmp_path.iterdir())[0].read_text()
-            for line in content.strip().split("\n"):
-                json.loads(line)  # Should not raise
+            # Count entries via the helper
+            assert _count_entries(str(files[0])) == 3
         finally:
             self._restore_log_dir()
 
@@ -125,11 +132,10 @@ class TestMaxEntriesGuard:
 
             files = list(tmp_path.iterdir())
             assert len(files) == 1
-            lines = files[0].read_text().strip().split("\n")
-            assert len(lines) == 5
+            assert _count_entries(str(files[0])) == 5
         finally:
             _mod._MAX_ENTRIES_PER_FILE = old_max
-            _mod._LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_logs")
+            _mod._LOG_DIR = _DEFAULT_LOG_DIR
 
 
 # ===================================================================
@@ -142,21 +148,18 @@ class TestMaxDirSizeGuard:
         old_max = _mod._MAX_DIR_SIZE_BYTES
         _mod._MAX_DIR_SIZE_BYTES = 100  # very small
         try:
-            # Write a large-ish entry to exceed 100 bytes
             entry = new_log_entry()
             entry["request"] = {"data": "x" * 200}
             write_log_entry(entry)  # Should succeed (first write)
 
-            # Second write should be skipped because dir > 100 bytes
-            write_log_entry(new_log_entry())
+            write_log_entry(new_log_entry())  # Should be skipped
 
             files = list(tmp_path.iterdir())
             assert len(files) == 1
-            lines = files[0].read_text().strip().split("\n")
-            assert len(lines) == 1
+            assert _count_entries(str(files[0])) == 1
         finally:
             _mod._MAX_DIR_SIZE_BYTES = old_max
-            _mod._LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_logs")
+            _mod._LOG_DIR = _DEFAULT_LOG_DIR
 
 
 # ===================================================================
@@ -173,7 +176,7 @@ class TestDateFilenames:
             files = list(tmp_path.iterdir())
             assert any(today in f.name for f in files)
         finally:
-            _mod._LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_logs")
+            _mod._LOG_DIR = _DEFAULT_LOG_DIR
 
 
 # ===================================================================
@@ -207,7 +210,7 @@ class TestSafeSerialize:
             obj = json.loads(content.strip())
             assert "bytes" in obj["request"]["audio_data"]
         finally:
-            _mod._LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_logs")
+            _mod._LOG_DIR = _DEFAULT_LOG_DIR
 
 
 # ===================================================================
@@ -232,32 +235,33 @@ class TestThreadSafety:
 
             files = list(tmp_path.iterdir())
             assert len(files) == 1
-            lines = files[0].read_text().strip().split("\n")
-            assert len(lines) == 20
-            # Each line should be valid JSON
-            for line in lines:
-                json.loads(line)
+            assert _count_entries(str(files[0])) == 20
         finally:
-            _mod._LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "_logs")
+            _mod._LOG_DIR = _DEFAULT_LOG_DIR
 
 
 # ===================================================================
-# _count_lines / _dir_size helpers
+# _count_entries / _dir_size helpers
 # ===================================================================
 
 class TestHelpers:
-    def test_count_lines_empty(self, tmp_path):
+    def test_count_entries_empty(self, tmp_path):
         f = tmp_path / "empty.txt"
         f.write_text("")
-        assert _count_lines(str(f)) == 0
+        assert _count_entries(str(f)) == 0
 
-    def test_count_lines_nonexistent(self):
-        assert _count_lines("/nonexistent/file.txt") == 0
+    def test_count_entries_nonexistent(self):
+        assert _count_entries("/nonexistent/file.txt") == 0
 
-    def test_count_lines_some(self, tmp_path):
-        f = tmp_path / "test.txt"
-        f.write_text("a\nb\nc\n")
-        assert _count_lines(str(f)) == 3
+    def test_count_entries_pretty_json(self, tmp_path):
+        _mod._LOG_DIR = str(tmp_path)
+        try:
+            for _ in range(3):
+                write_log_entry(new_log_entry())
+            files = list(tmp_path.iterdir())
+            assert _count_entries(str(files[0])) == 3
+        finally:
+            _mod._LOG_DIR = _DEFAULT_LOG_DIR
 
     def test_dir_size_empty(self, tmp_path):
         assert _dir_size(str(tmp_path)) == 0

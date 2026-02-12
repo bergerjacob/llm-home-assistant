@@ -1,7 +1,7 @@
 """Interaction logger for LLM Home Assistant.
 
-Writes one JSON object per line (JSONL) to _logs/interactions_YYYY-MM-DD.jsonl.
-Standalone module — no Home Assistant dependencies.
+Writes pretty-printed JSON entries to _logs/interactions_YYYY-MM-DD.json.
+Entries are separated by a newline. Standalone module — no HA dependencies.
 """
 from __future__ import annotations
 
@@ -46,11 +46,11 @@ def _dir_size(path: str) -> int:
     return total
 
 
-def _count_lines(path: str) -> int:
-    """Return the number of lines in *path* (cheap, no JSON parsing)."""
+def _count_entries(path: str) -> int:
+    """Count log entries by looking for top-level timestamp markers."""
     try:
         with open(path, "r", encoding="utf-8") as f:
-            return sum(1 for _ in f)
+            return sum(1 for line in f if line.strip().startswith('"timestamp"'))
     except OSError:
         return 0
 
@@ -67,7 +67,7 @@ def _safe_serialize(obj: Any) -> Any:
 
 
 def write_log_entry(entry: dict[str, Any]) -> None:
-    """Append *entry* as a single JSON line to today's log file.
+    """Append *entry* as pretty-printed JSON to today's log file.
 
     Thread-safe.  All errors are caught and logged — never raises.
     """
@@ -81,17 +81,20 @@ def write_log_entry(entry: dict[str, Any]) -> None:
                 return
 
             today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-            filename = f"interactions_{today}.jsonl"
+            filename = f"interactions_{today}.json"
             filepath = os.path.join(_LOG_DIR, filename)
 
             # Check per-file entry limit
-            if os.path.exists(filepath) and _count_lines(filepath) >= _MAX_ENTRIES_PER_FILE:
+            if os.path.exists(filepath) and _count_entries(filepath) >= _MAX_ENTRIES_PER_FILE:
                 _LOGGER.warning("Log file %s reached %d entries — skipping write", filename, _MAX_ENTRIES_PER_FILE)
                 return
 
-            line = json.dumps(entry, default=_safe_serialize, ensure_ascii=False)
+            block = json.dumps(entry, default=_safe_serialize, ensure_ascii=False, indent=2)
             with open(filepath, "a", encoding="utf-8") as f:
-                f.write(line + "\n")
+                # Separator between entries
+                if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+                    f.write("\n")
+                f.write(block + "\n")
 
     except Exception:
         _LOGGER.exception("Failed to write interaction log entry")
