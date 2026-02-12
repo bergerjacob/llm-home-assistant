@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import re
+import threading
 from typing import Any, Dict, Union
 
 from openai import OpenAI
@@ -17,6 +18,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service import async_get_all_descriptions
 
 _LOGGER = logging.getLogger(__name__)
+
+# -----------------------------------------------------------------------------
+# Client Singleton (Task 2)
+# -----------------------------------------------------------------------------
+_client_lock = threading.Lock()
+_client: OpenAI | None = None
+_client_key: str | None = None
+
+
+def _get_client(api_key: str) -> OpenAI:
+    """Return a reusable OpenAI client, creating a new one only if the key changes."""
+    global _client, _client_key
+    with _client_lock:
+        if _client is None or _client_key != api_key:
+            _client = OpenAI(api_key=api_key)
+            _client_key = api_key
+            _LOGGER.debug("Created new OpenAI client (key changed=%s)", _client_key != api_key)
+        return _client
 
 # -----------------------------------------------------------------------------
 # Model Configuration
@@ -240,14 +259,21 @@ def _save_cache_stats(usage_info: dict[str, Any]) -> None:
 # --------------------------------------------------------------------
 # INTERNAL: blocking call to OpenAI (run in executor)
 # --------------------------------------------------------------------
+_TEXT_TOKEN_CAP = 250
+_RETRY_TOKEN_CAP = 500
+_FIX_JSON_MSG = "Fix JSON: return ONLY valid JSON for the required schema. No prose."
+
+
 def _blocking_gpt_call(
     api_key: str | None,
     messages: list[dict[str, Any]],
     hass_context_text: str,
+    model_name: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, int] | None]:
     """
     Synchronous helper that actually calls the OpenAI Chat Completions API.
     This is run in a background thread using run_in_executor.
+    Retries once on truncation or JSON parse failure with a higher token cap.
     """
     key = api_key or os.environ.get("OPENAI_API_KEY")
     if not key:
@@ -256,7 +282,8 @@ def _blocking_gpt_call(
             "Set OPENAI_API_KEY env var or pass api_key into async_query_openai."
         )
 
-    client = OpenAI(api_key=key)
+    client = _get_client(key)
+    model = model_name or OPENAI_MODEL
 
     # Dynamic system prompt
     system_message_content = (
@@ -301,13 +328,68 @@ def _blocking_gpt_call(
         *messages,
     ]
 
+    # --- First attempt with standard token cap ---
+    data, usage_info, retry_reason = _try_gpt_call(
+        client, model, final_messages, _TEXT_TOKEN_CAP,
+    )
+    if data is not None:
+        return data, usage_info
+
+    # --- Retry once with higher cap + fix-JSON system message ---
+    _LOGGER.warning("Token cap retry triggered (cap=%d) reason=%s", _RETRY_TOKEN_CAP, retry_reason)
+    retry_messages = list(final_messages) + [
+        {"role": "system", "content": _FIX_JSON_MSG},
+    ]
+    data, usage_info, _ = _try_gpt_call(
+        client, model, retry_messages, _RETRY_TOKEN_CAP,
+    )
+    if data is not None:
+        return data, usage_info
+
+    # Both attempts failed
+    return {
+        "actions": [],
+        "explanation": f"Failed after retry: {retry_reason}",
+    }, usage_info
+
+
+def _try_gpt_call(
+    client: OpenAI,
+    model: str,
+    messages: list[dict[str, Any]],
+    max_tokens: int,
+) -> tuple[dict[str, Any] | None, dict[str, int] | None, str]:
+    """
+    Single attempt at an OpenAI chat completion.
+    Returns (data, usage_info, retry_reason).
+    data is None if the call should be retried.
+    """
     response = client.chat.completions.create(
-        model=OPENAI_MODEL,
-        messages=final_messages,
+        model=model,
+        messages=messages,
         response_format={"type": "json_object"},
+        max_completion_tokens=max_tokens,
     )
 
-    # Extract token usage from OpenAI API response
+    # Extract token usage
+    usage_info = _extract_usage(response)
+
+    # Check for truncation
+    finish_reason = response.choices[0].finish_reason
+    if finish_reason == "length":
+        return None, usage_info, "truncated"
+
+    content = response.choices[0].message.content
+    try:
+        plan = Plan.model_validate_json(content)
+        return plan.model_dump(), usage_info, ""
+    except Exception as e:
+        _LOGGER.error("Failed to parse/validate JSON from model: %s; raw content: %s", e, content)
+        return None, usage_info, f"parse_error: {e}"
+
+
+def _extract_usage(response: Any) -> dict[str, int] | None:
+    """Extract token usage info from an OpenAI response."""
     usage_info = None
     try:
         if response.usage:
@@ -316,8 +398,6 @@ def _blocking_gpt_call(
                 "completion_tokens": response.usage.completion_tokens,
                 "total_tokens": response.usage.total_tokens,
             }
-            
-            # Extract cache information if available
             if hasattr(response.usage, 'prompt_tokens_details'):
                 details = response.usage.prompt_tokens_details
                 if details and hasattr(details, 'cached_tokens'):
@@ -326,25 +406,10 @@ def _blocking_gpt_call(
                         details.cached_tokens / response.usage.prompt_tokens * 100
                         if response.usage.prompt_tokens > 0 else 0
                     )
-            
-            # Save cache statistics to file
             _save_cache_stats(usage_info)
     except Exception as e:
         _LOGGER.error("Failed to extract token usage: %s", e)
-
-    content = response.choices[0].message.content
-
-    try:
-        # Validate against our Plan schema
-        plan = Plan.model_validate_json(content)
-        return plan.model_dump(), usage_info
-    except Exception as e:
-        _LOGGER.error("Failed to parse/validate JSON from model: %s; raw content: %s", e, content)
-        # Safe fallback
-        return {
-            "actions": [],
-            "explanation": f"Failed to parse JSON from model: {e}",
-        }, usage_info
+    return usage_info
 
 
 # --------------------------------------------------------------------
@@ -357,17 +422,20 @@ async def async_query_openai(
     api_key: str,
     messages: list[dict[str, Any]],
     allow_cfg: dict[str, Any] | None = None,
+    model_name: str | None = None,
+    force_rebuild: bool = False,
 ) -> dict[str, Any]:
     """
     Call OpenAI using the configured model and return a structured
     JSON object that Home Assistant can interpret.
     """
-    _LOGGER.debug("Preparing OpenAI JSON-mode call (model: %s)", OPENAI_MODEL)
+    effective_model = model_name or OPENAI_MODEL
+    _LOGGER.debug("Preparing OpenAI JSON-mode call (model: %s)", effective_model)
 
     # Build compact context on the event loop (uses async_all / async_render)
     try:
         from ...device_info import build_compact_context
-        hass_context_text = build_compact_context(hass, allow_cfg)
+        hass_context_text = build_compact_context(hass, allow_cfg, force_rebuild=force_rebuild)
         _LOGGER.info("Compact context size: %d chars", len(hass_context_text))
     except Exception as e:
         _LOGGER.error("Failed to build HA context: %s", e)
@@ -387,14 +455,15 @@ async def async_query_openai(
             api_key,
             messages,
             hass_context_text,
+            effective_model,
         )
-        
+
         # Log token usage in the async context where logging is more visible
         if usage_info:
             cache_info = ""
             if "cached_tokens" in usage_info:
                 cache_info = f", Cached: {usage_info['cached_tokens']} tokens ({usage_info['cache_hit_rate']:.1f}%)"
-            
+
             _LOGGER.info(
                 "OpenAI API token usage - Input: %d tokens, Output: %d tokens, Total: %d tokens%s",
                 usage_info["prompt_tokens"],
@@ -404,7 +473,7 @@ async def async_query_openai(
             )
         else:
             _LOGGER.warning("OpenAI API response missing usage information")
-            
+
     except Exception as e:
         _LOGGER.error("OpenAI API request failed: %s", e)
         return {

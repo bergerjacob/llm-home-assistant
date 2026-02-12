@@ -15,8 +15,23 @@ from voluptuous.schema_builder import Marker
 _LOGGER = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# TTL cache for compact context (2-second), keyed per hass instance
+# State-query detection (Task 6)
 # ---------------------------------------------------------------------------
+_STATE_QUERY_RE = re.compile(
+    r"\b(what is|what are|what's|status|is the|are the|check|tell me|how is|how are|current|state of)\b",
+    re.IGNORECASE,
+)
+
+
+def _is_state_query(text: str) -> bool:
+    """Return True if the user text looks like a state/status query."""
+    return bool(_STATE_QUERY_RE.search(text))
+
+
+# ---------------------------------------------------------------------------
+# TTL cache for compact context (30-second), keyed per hass instance
+# ---------------------------------------------------------------------------
+_CONTEXT_TTL = 30.0
 _compact_caches: dict[int, dict[str, Any]] = {}
 
 # Exclusion patterns (mirrored from call_openai.py to avoid circular import)
@@ -110,10 +125,15 @@ def _entity_to_compact(entity_id: str, state, attrs: dict, area: str | None) -> 
     return c
 
 
-def build_compact_context(hass: HomeAssistant, allow_cfg: dict | None) -> str:
+def build_compact_context(
+    hass: HomeAssistant,
+    allow_cfg: dict | None,
+    force_rebuild: bool = False,
+) -> str:
     """
     Build a compact JSON context of entities + allowed services.
-    Uses a 2-second TTL cache keyed per hass instance.
+    Uses a 30-second TTL cache keyed per hass instance.
+    Pass force_rebuild=True to bypass cache (e.g. for state queries).
     MUST be called from the event loop.
     """
     hass_key = id(hass)
@@ -121,9 +141,17 @@ def build_compact_context(hass: HomeAssistant, allow_cfg: dict | None) -> str:
 
     cfg_h = _cfg_hash(allow_cfg)
     now = time.monotonic()
-    if cache["data"] and (now - cache["ts"] < 2.0) and cache["cfg_hash"] == cfg_h:
+    if (
+        not force_rebuild
+        and cache["data"]
+        and (now - cache["ts"] < _CONTEXT_TTL)
+        and cache["cfg_hash"] == cfg_h
+    ):
         _LOGGER.debug("Compact context cache hit (age=%.2fs)", now - cache["ts"])
         return cache["data"]
+
+    if force_rebuild:
+        _LOGGER.debug("Compact context force rebuild requested")
 
     allow_cfg = allow_cfg or {}
     allowed_domains = set(allow_cfg.get("domains") or [])

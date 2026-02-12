@@ -16,12 +16,17 @@ from .call_openai import (
     Action,
     Plan,
     _save_cache_stats,
+    _get_client,
+    _extract_usage,
 )
 from .tool_defs import PROPOSE_ACTIONS_TOOL
 
 _LOGGER = logging.getLogger(__name__)
 
 AUDIO_MODEL = "gpt-4o-audio-preview"
+_AUDIO_TOKEN_CAP = 280
+_AUDIO_RETRY_CAP = 500
+_FIX_JSON_MSG = "Fix JSON: return ONLY valid JSON for the required schema. No prose."
 
 SYSTEM_PROMPT_TEMPLATE = """\
 You are a voice-controlled Home Assistant.
@@ -50,9 +55,16 @@ def _blocking_audio_gpt_call(
     user_text: str | None,
     audio_b64: str,
     audio_format: str,
+    model_name: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, int] | None]:
     """Synchronous helper — runs in executor to avoid blocking the HA loop."""
-    client = OpenAI(api_key=api_key)
+    client = _get_client(api_key)
+
+    if model_name and model_name != AUDIO_MODEL:
+        _LOGGER.info(
+            "Configured model=%s differs from audio model=%s; using %s",
+            model_name, AUDIO_MODEL, AUDIO_MODEL,
+        )
 
     # Build multimodal user content
     user_content: list[dict[str, Any]] = []
@@ -70,45 +82,62 @@ def _blocking_audio_gpt_call(
 
     _LOGGER.debug("Calling %s with audio (%s format)", AUDIO_MODEL, audio_format)
 
+    # --- First attempt with standard token cap ---
+    data, usage_info, retry_reason = _try_audio_call(
+        client, messages, _AUDIO_TOKEN_CAP,
+    )
+    if data is not None:
+        return data, usage_info
+
+    # --- Retry once with higher cap + fix-JSON system message ---
+    _LOGGER.warning("Audio token cap retry triggered (cap=%d) reason=%s", _AUDIO_RETRY_CAP, retry_reason)
+    retry_messages = list(messages) + [
+        {"role": "system", "content": _FIX_JSON_MSG},
+    ]
+    data, usage_info, _ = _try_audio_call(
+        client, retry_messages, _AUDIO_RETRY_CAP,
+    )
+    if data is not None:
+        return data, usage_info
+
+    return {
+        "actions": [],
+        "explanation": f"Audio failed after retry: {retry_reason}",
+    }, usage_info
+
+
+def _try_audio_call(
+    client: OpenAI,
+    messages: list[dict[str, Any]],
+    max_tokens: int,
+) -> tuple[dict[str, Any] | None, dict[str, int] | None, str]:
+    """
+    Single attempt at an audio OpenAI call.
+    Returns (data, usage_info, retry_reason). data is None if retry needed.
+    """
     response = client.chat.completions.create(
         model=AUDIO_MODEL,
         messages=messages,
         modalities=["text"],
         tools=[PROPOSE_ACTIONS_TOOL],
         tool_choice={"type": "function", "function": {"name": "propose_actions"}},
+        max_completion_tokens=max_tokens,
     )
 
-    # --- Extract usage info ---
-    usage_info: dict[str, int] | None = None
-    try:
-        if response.usage:
-            usage_info = {
-                "prompt_tokens": response.usage.prompt_tokens,
-                "completion_tokens": response.usage.completion_tokens,
-                "total_tokens": response.usage.total_tokens,
-            }
-            if hasattr(response.usage, "prompt_tokens_details"):
-                details = response.usage.prompt_tokens_details
-                if details and hasattr(details, "cached_tokens"):
-                    usage_info["cached_tokens"] = details.cached_tokens
-                    usage_info["cache_hit_rate"] = (
-                        details.cached_tokens / response.usage.prompt_tokens * 100
-                        if response.usage.prompt_tokens > 0
-                        else 0
-                    )
-            _save_cache_stats(usage_info)
-    except Exception as exc:
-        _LOGGER.error("Failed to extract token usage: %s", exc)
+    usage_info = _extract_usage(response)
 
-    # --- Parse function-call response ---
+    # Check for truncation
     choice = response.choices[0]
+    if choice.finish_reason == "length":
+        return None, usage_info, "truncated"
+
     tool_calls = choice.message.tool_calls
 
     if tool_calls:
         args_str = tool_calls[0].function.arguments
         try:
             plan = Plan.model_validate_json(args_str)
-            return plan.model_dump(), usage_info
+            return plan.model_dump(), usage_info, ""
         except Exception as exc:
             _LOGGER.warning(
                 "Pydantic validation failed, trying raw JSON: %s", exc
@@ -118,9 +147,10 @@ def _blocking_audio_gpt_call(
                 return {
                     "actions": raw.get("actions", []),
                     "explanation": raw.get("explanation", ""),
-                }, usage_info
+                }, usage_info, ""
             except json.JSONDecodeError as je:
                 _LOGGER.error("JSON decode failed for tool_call args: %s", je)
+                return None, usage_info, f"parse_error: {je}"
 
     # Fallback: try to parse text content
     content = choice.message.content or ""
@@ -128,14 +158,14 @@ def _blocking_audio_gpt_call(
         _LOGGER.warning("No tool_call returned; attempting text fallback parse")
         try:
             plan = Plan.model_validate_json(content)
-            return plan.model_dump(), usage_info
+            return plan.model_dump(), usage_info, ""
         except Exception:
             pass
 
     return {
         "actions": [],
         "explanation": content or "Audio model returned no actionable response.",
-    }, usage_info
+    }, usage_info, ""
 
 
 async def async_query_openai_audio(
@@ -147,6 +177,8 @@ async def async_query_openai_audio(
     audio_format: str,
     user_text: str | None = None,
     allow_cfg: dict[str, Any] | None = None,
+    model_name: str | None = None,
+    force_rebuild: bool = False,
 ) -> dict[str, Any]:
     """Async entry-point: send audio directly to gpt-4o-audio-preview."""
     _LOGGER.debug("Preparing audio call (model: %s)", AUDIO_MODEL)
@@ -154,7 +186,7 @@ async def async_query_openai_audio(
     # Build compact context on the event loop (uses async_all / async_render)
     try:
         from ...device_info import build_compact_context
-        hass_context_text = build_compact_context(hass, allow_cfg)
+        hass_context_text = build_compact_context(hass, allow_cfg, force_rebuild=force_rebuild)
         _LOGGER.info("Compact context size: %d chars", len(hass_context_text))
     except Exception as exc:
         _LOGGER.error("Failed to build HA context: %s", exc)
@@ -173,6 +205,7 @@ async def async_query_openai_audio(
             user_text,
             audio_b64,
             audio_format,
+            model_name,
         )
 
         if usage_info:

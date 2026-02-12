@@ -3,10 +3,13 @@ Model calling module for LLM Home Assistant.
 Contains the main orchestration logic for processing user requests,
 querying the LLM, and executing the returned actions.
 """
+import asyncio
+import hashlib
 import logging
 import os
 import json
 import time
+from collections import OrderedDict
 from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -15,9 +18,96 @@ from homeassistant.const import ATTR_ENTITY_ID
 from .models.openai.call_openai import async_query_openai
 from .models.openai.call_openai_audio import async_query_openai_audio
 from .audio_utils import validate_audio, encode_audio_base64, normalize_format
+from .device_info import _is_state_query, _cfg_hash
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "llm_home_assistant"
+
+# ---------------------------------------------------------------------------
+# Response cache (Task 5) — text path only
+# ---------------------------------------------------------------------------
+_RESPONSE_CACHE: OrderedDict[str, tuple[float, dict[str, Any]]] = OrderedDict()
+_CACHE_TTL = 60.0
+_CACHE_MAX = 50
+
+_CACHEABLE_SERVICES = frozenset({
+    "light.turn_on", "light.turn_off",
+    "switch.turn_on", "switch.turn_off",
+    "cover.open_cover", "cover.close_cover", "cover.set_cover_position",
+})
+
+
+def _cache_key(text: str, model_name: str, cfg_hash: str) -> str:
+    """Build a short SHA-256 cache key."""
+    raw = text.strip().lower() + model_name + cfg_hash
+    return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+
+def _cache_get(key: str) -> dict[str, Any] | None:
+    """Return cached response if fresh, else None."""
+    entry = _RESPONSE_CACHE.get(key)
+    if entry is None:
+        return None
+    ts, data = entry
+    if time.monotonic() - ts > _CACHE_TTL:
+        _RESPONSE_CACHE.pop(key, None)
+        return None
+    # Move to end (most recently used)
+    _RESPONSE_CACHE.move_to_end(key)
+    return data
+
+
+def _cache_put(key: str, data: dict[str, Any]) -> None:
+    """Store response in cache, evicting oldest if full."""
+    _RESPONSE_CACHE[key] = (time.monotonic(), data)
+    _RESPONSE_CACHE.move_to_end(key)
+    while len(_RESPONSE_CACHE) > _CACHE_MAX:
+        _RESPONSE_CACHE.popitem(last=False)
+
+
+def _all_cacheable(actions: list[dict[str, Any]]) -> bool:
+    """Return True only if every action's service is in _CACHEABLE_SERVICES."""
+    for a in actions:
+        svc = f"{a.get('domain', '')}.{a.get('service', '')}"
+        if svc not in _CACHEABLE_SERVICES:
+            return False
+    return True
+
+
+# ---------------------------------------------------------------------------
+# Parallel action execution (Task 4)
+# ---------------------------------------------------------------------------
+def _build_action_groups(actions: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
+    """
+    Group actions by entity overlap for parallel execution.
+    Actions with disjoint entity sets go in the same group (parallel).
+    Actions with overlapping entities go in different groups (sequential).
+    Actions with no entity_id get their own group.
+    """
+    groups: list[tuple[set[str], list[dict[str, Any]]]] = []
+
+    for action in actions:
+        eid = action.get("entity_id")
+        if not eid:
+            # No entity_id → own group
+            groups.append((set(), [action]))
+            continue
+
+        entity_set = set(eid) if isinstance(eid, list) else {eid}
+
+        # Find a group with disjoint entities
+        placed = False
+        for group_entities, group_actions in groups:
+            if group_entities and not group_entities & entity_set:
+                group_entities.update(entity_set)
+                group_actions.append(action)
+                placed = True
+                break
+
+        if not placed:
+            groups.append((entity_set, [action]))
+
+    return [g[1] for g in groups]
 
 
 def merge_actions(actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -196,9 +286,9 @@ async def call_model_wrapper(
     """
     Main wrapper to process the user request.
     1. Checks API key.
-    2. Calls LLM (text path or audio-direct path).
+    2. Calls LLM (text path or audio-direct path), with response cache for text.
     3. Updates sensor/events.
-    4. Executes actions.
+    4. Executes actions (parallel where possible).
     """
     _LOGGER.info("Processing LLM request: %s (model: %s, audio=%s)", text, model_name, audio_data is not None)
 
@@ -219,13 +309,19 @@ async def call_model_wrapper(
     session = async_get_clientsession(hass)
     t_start = time.monotonic()
 
+    # Detect state queries → force context rebuild for fresh data
+    force_rebuild = _is_state_query(text) if text else False
+
     try:
         if audio_data is not None:
-            # --- Audio-direct path ---
+            # --- Audio-direct path (no response cache) ---
             fmt = normalize_format(audio_format or "wav")
             validate_audio(audio_data, fmt)
             audio_b64 = encode_audio_base64(audio_data)
             _LOGGER.info("Audio-direct path: %d bytes, format=%s", len(audio_data), fmt)
+
+            # For audio, detect state query from user_text if present
+            audio_force = _is_state_query(text) if text else False
 
             reply = await async_query_openai_audio(
                 hass=hass,
@@ -235,17 +331,40 @@ async def call_model_wrapper(
                 audio_format=fmt,
                 user_text=text if text else None,
                 allow_cfg=allow_cfg,
+                model_name=model_name,
+                force_rebuild=audio_force,
             )
         else:
-            # --- Existing text path ---
-            messages = [{"role": "user", "content": text}]
-            reply = await async_query_openai(
-                hass=hass,
-                session=session,
-                api_key=openai_api_key,
-                messages=messages,
-                allow_cfg=allow_cfg,
-            )
+            # --- Text path with response cache ---
+            cfg_h = _cfg_hash(allow_cfg)
+            c_key = _cache_key(text, model_name, cfg_h)
+
+            cached = _cache_get(c_key)
+            if cached is not None:
+                _LOGGER.info("Response cache HIT key=%s", c_key)
+                reply = cached
+            else:
+                _LOGGER.info("Response cache MISS key=%s", c_key)
+                messages = [{"role": "user", "content": text}]
+                reply = await async_query_openai(
+                    hass=hass,
+                    session=session,
+                    api_key=openai_api_key,
+                    messages=messages,
+                    allow_cfg=allow_cfg,
+                    model_name=model_name,
+                    force_rebuild=force_rebuild,
+                )
+
+                # Cache only if actions exist and all are cacheable
+                raw_acts = reply.get("actions") or []
+                if raw_acts and _all_cacheable(raw_acts):
+                    _cache_put(c_key, reply)
+                    _LOGGER.info("Response cache STORE key=%s", c_key)
+                else:
+                    reason = "no_actions" if not raw_acts else "uncacheable_service"
+                    _LOGGER.info("Response cache SKIP reason=%s", reason)
+
     except Exception as exc:
         _LOGGER.exception("OpenAI call failed: %s", exc)
         # Update sensor with error
@@ -277,5 +396,15 @@ async def call_model_wrapper(
         # Fire event
         hass.bus.async_fire("llm_response_ready", {"payload": explanation})
 
-    for action in actions:
-        await _execute_tool_call(hass, action, allow_cfg)
+    # --- Parallel action execution (Task 4) ---
+    action_groups = _build_action_groups(actions)
+    group_sizes = [len(g) for g in action_groups]
+    _LOGGER.info("Executing %d action groups; group sizes: %s", len(action_groups), group_sizes)
+
+    for group in action_groups:
+        if len(group) == 1:
+            await _execute_tool_call(hass, group[0], allow_cfg)
+        else:
+            await asyncio.gather(
+                *(_execute_tool_call(hass, a, allow_cfg) for a in group)
+            )
