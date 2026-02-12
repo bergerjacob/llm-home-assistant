@@ -8,6 +8,7 @@ import logging
 import os
 import re
 import threading
+import time
 from typing import Any, Dict, Union
 
 from openai import OpenAI
@@ -264,10 +265,11 @@ def _blocking_gpt_call(
     messages: list[dict[str, Any]],
     hass_context_text: str,
     model_name: str | None = None,
-) -> tuple[dict[str, Any], dict[str, int] | None]:
+) -> tuple[dict[str, Any], dict[str, int] | None, dict[str, Any]]:
     """
     Synchronous helper that actually calls the OpenAI Chat Completions API.
     This is run in a background thread using run_in_executor.
+    Returns (data, usage_info, debug_info).
     """
     key = api_key or os.environ.get("OPENAI_API_KEY")
     if not key:
@@ -322,26 +324,39 @@ def _blocking_gpt_call(
         *messages,
     ]
 
+    t0 = time.monotonic()
     response = client.chat.completions.create(
         model=model,
         messages=final_messages,
         response_format={"type": "json_object"},
     )
+    api_call_time = time.monotonic() - t0
 
     # Extract token usage
     usage_info = _extract_usage(response)
 
     content = response.choices[0].message.content
 
+    debug_info: dict[str, Any] = {
+        "system_prompt": system_message_content,
+        "model_used": model,
+        "raw_response": content,
+        "api_call_time": round(api_call_time, 4),
+    }
+
     try:
         plan = Plan.model_validate_json(content)
-        return plan.model_dump(), usage_info
+        debug_info["parse_success"] = True
+        debug_info["pydantic_valid"] = True
+        return plan.model_dump(), usage_info, debug_info
     except Exception as e:
         _LOGGER.error("Failed to parse/validate JSON from model: %s; raw content: %s", e, content)
+        debug_info["parse_success"] = False
+        debug_info["pydantic_valid"] = False
         return {
             "actions": [],
             "explanation": f"Failed to parse JSON from model: {e}",
-        }, usage_info
+        }, usage_info, debug_info
 
 
 def _extract_usage(response: Any) -> dict[str, int] | None:
@@ -389,6 +404,7 @@ async def async_query_openai(
     _LOGGER.debug("Preparing OpenAI JSON-mode call (model: %s)", effective_model)
 
     # Build compact context on the event loop (uses async_all / async_render)
+    t_ctx = time.monotonic()
     try:
         from ...device_info import build_compact_context
         hass_context_text = build_compact_context(hass, allow_cfg, force_rebuild=force_rebuild)
@@ -399,13 +415,15 @@ async def async_query_openai(
             "actions": [],
             "explanation": f"Failed to build HA context: {e}"
         }
+    context_build_time = round(time.monotonic() - t_ctx, 4)
 
     loop = asyncio.get_running_loop()
 
     try:
         data: dict[str, Any]
         usage_info: dict[str, int] | None
-        data, usage_info = await loop.run_in_executor(
+        debug_info: dict[str, Any]
+        data, usage_info, debug_info = await loop.run_in_executor(
             None,
             _blocking_gpt_call,
             api_key,
@@ -413,6 +431,14 @@ async def async_query_openai(
             hass_context_text,
             effective_model,
         )
+
+        # Attach debug info for the interaction logger
+        data["_debug_info"] = debug_info
+        data["_debug_info"]["context_build_time"] = context_build_time
+        data["_debug_info"]["context_size_chars"] = len(hass_context_text)
+        data["_debug_info"]["compact_context_packet"] = hass_context_text
+        if usage_info:
+            data["_debug_info"]["token_usage"] = usage_info
 
         # Log token usage in the async context where logging is more visible
         if usage_info:

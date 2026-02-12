@@ -1,3 +1,4 @@
 *.pyc
 ha_config/
 .env
+_logs/

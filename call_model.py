@@ -18,7 +18,8 @@ from homeassistant.const import ATTR_ENTITY_ID
 from .models.openai.call_openai import async_query_openai
 from .models.openai.call_openai_audio import async_query_openai_audio
 from .audio_utils import validate_audio, encode_audio_base64, normalize_format
-from .device_info import _is_state_query, _cfg_hash
+from .device_info import _is_state_query, _cfg_hash, _last_cache_hit
+from .interaction_logger import new_log_entry, write_log_entry
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "llm_home_assistant"
@@ -212,9 +213,10 @@ def _is_allowed(
     return True
 
 
-async def _execute_tool_call(hass: HomeAssistant, action: dict[str, Any], allow_cfg: dict[str, Any] | None) -> None:
+async def _execute_tool_call(hass: HomeAssistant, action: dict[str, Any], allow_cfg: dict[str, Any] | None) -> dict[str, Any]:
     """
     Execute a single JSON action item returned by GPT-4o.
+    Returns a result dict for the interaction log.
     """
     _LOGGER.debug("Received GPT action: %s", action)
 
@@ -222,29 +224,56 @@ async def _execute_tool_call(hass: HomeAssistant, action: dict[str, Any], allow_
     service = action.get("service")
     entity_id = action.get("entity_id", None)
     data = action.get("data") or {}
+    t0 = time.monotonic()
+
+    result: dict[str, Any] = {
+        "domain": domain,
+        "service": service,
+        "entity_id": entity_id,
+        "data": {k: v for k, v in data.items() if k != ATTR_ENTITY_ID},
+        "allowed": False,
+        "valid_entities": [],
+        "dropped_entities": [],
+        "success": False,
+        "error": None,
+    }
 
     # Validate required fields
     if not domain or not service:
         _LOGGER.error("GPT action missing domain or service: %s", action)
-        return
+        result["error"] = "missing domain or service"
+        result["execution_time"] = round(time.monotonic() - t0, 4)
+        return result
 
     # Handle entity_id (can be string or list of strings)
+    dropped: list[str] = []
     if entity_id:
         if isinstance(entity_id, list):
             valid = [eid for eid in entity_id if hass.states.get(eid) is not None]
             invalid = set(entity_id) - set(valid)
+            dropped = list(invalid)
             if invalid:
                 _LOGGER.warning("Dropping unknown entity_ids: %s", invalid)
             if not valid:
                 _LOGGER.error("No valid entity_ids remain for %s.%s", domain, service)
-                return
+                result["dropped_entities"] = dropped
+                result["error"] = "no valid entity_ids"
+                result["execution_time"] = round(time.monotonic() - t0, 4)
+                return result
             entity_id = valid if len(valid) > 1 else valid[0]
             data.setdefault(ATTR_ENTITY_ID, entity_id)
+            result["valid_entities"] = valid
+            result["dropped_entities"] = dropped
         else:
             if hass.states.get(entity_id) is None:
                 _LOGGER.error("GPT requested unknown entity_id: %s", entity_id)
-                return
+                result["dropped_entities"] = [entity_id]
+                result["error"] = f"unknown entity_id: {entity_id}"
+                result["execution_time"] = round(time.monotonic() - t0, 4)
+                return result
             data.setdefault(ATTR_ENTITY_ID, entity_id)
+            result["valid_entities"] = [entity_id]
+    result["entity_id"] = entity_id
 
     # Enforce allowlist restrictions
     if not _is_allowed(allow_cfg, domain, service, entity_id):
@@ -254,8 +283,11 @@ async def _execute_tool_call(hass: HomeAssistant, action: dict[str, Any], allow_
             service,
             data,
         )
-        return
+        result["error"] = "blocked by allowlist"
+        result["execution_time"] = round(time.monotonic() - t0, 4)
+        return result
 
+    result["allowed"] = True
     _LOGGER.info("Executing GPT action %s.%s with %s", domain, service, data)
 
     try:
@@ -265,6 +297,7 @@ async def _execute_tool_call(hass: HomeAssistant, action: dict[str, Any], allow_
             data,
             blocking=True
         )
+        result["success"] = True
     except Exception as exc:
         _LOGGER.error(
             "Service call %s.%s failed with data %s: %s",
@@ -273,6 +306,10 @@ async def _execute_tool_call(hass: HomeAssistant, action: dict[str, Any], allow_
             data,
             exc,
         )
+        result["error"] = str(exc)
+
+    result["execution_time"] = round(time.monotonic() - t0, 4)
+    return result
 
 
 async def call_model_wrapper(
@@ -289,8 +326,17 @@ async def call_model_wrapper(
     2. Calls LLM (text path or audio-direct path), with response cache for text.
     3. Updates sensor/events.
     4. Executes actions (parallel where possible).
+    5. Writes interaction log entry.
     """
     _LOGGER.info("Processing LLM request: %s (model: %s, audio=%s)", text, model_name, audio_data is not None)
+
+    log = new_log_entry()
+    log["request"] = {
+        "type": "audio" if audio_data is not None else "text",
+        "user_prompt": text,
+        "model_requested": model_name,
+        "audio_format": audio_format if audio_data is not None else None,
+    }
 
     # Retrieve configuration from hass.data
     data_store = hass.data.get(DOMAIN, {})
@@ -299,11 +345,15 @@ async def call_model_wrapper(
 
     if not openai_api_key:
         _LOGGER.error("No OpenAI API key available; aborting OpenAI request.")
+        log["error"] = "no API key"
+        await hass.async_add_executor_job(write_log_entry, log)
         return
 
     # Only process OpenAI requests through the OpenAI handler
     if model_name not in ("openai", "gpt-4o", "gpt-4o-mini", "gpt-5-mini", "gpt-4o-audio-preview"):
         _LOGGER.warning("Model '%s' is not handled by OpenAI handler, skipping", model_name)
+        log["error"] = f"unsupported model: {model_name}"
+        await hass.async_add_executor_job(write_log_entry, log)
         return
 
     # "openai" is a handler type, not a real model name — pass None so
@@ -316,6 +366,9 @@ async def call_model_wrapper(
 
     # Detect state queries → force context rebuild for fresh data
     force_rebuild = _is_state_query(text) if text else False
+    state_query_detected = force_rebuild
+
+    response_cache_hit = False
 
     try:
         if audio_data is not None:
@@ -348,6 +401,7 @@ async def call_model_wrapper(
             if cached is not None:
                 _LOGGER.info("Response cache HIT key=%s", c_key)
                 reply = cached
+                response_cache_hit = True
             else:
                 _LOGGER.info("Response cache MISS key=%s", c_key)
                 messages = [{"role": "user", "content": text}]
@@ -376,12 +430,52 @@ async def call_model_wrapper(
         sensor_entity = data_store.get("sensor_entity")
         if sensor_entity:
             sensor_entity.update_response(f"Error: {exc}")
+        log["error"] = str(exc)
+        log["timing"]["total_elapsed"] = round(time.monotonic() - t_start, 4)
+        await hass.async_add_executor_job(write_log_entry, log)
         return
+
+    # --- Extract debug info attached by the OpenAI callers ---
+    debug_info = reply.pop("_debug_info", {})
+    hass_key = id(hass)
+    context_cache_hit = _last_cache_hit.get(hass_key, False)
+
+    log["context"] = {
+        "allowlist_config": allow_cfg,
+        "force_rebuild": force_rebuild,
+        "state_query_detected": state_query_detected,
+        "context_cache_hit": context_cache_hit,
+        "context_size_chars": debug_info.get("context_size_chars"),
+        "context_build_time": debug_info.get("context_build_time"),
+        "compact_context_packet": debug_info.get("compact_context_packet"),
+    }
+
+    log["llm_call"] = {
+        "system_prompt": debug_info.get("system_prompt"),
+        "model_used": debug_info.get("model_used"),
+        "response_cache_hit": response_cache_hit,
+        "raw_response": debug_info.get("raw_response"),
+        "parse_success": debug_info.get("parse_success"),
+        "pydantic_valid": debug_info.get("pydantic_valid"),
+        "api_call_time": debug_info.get("api_call_time"),
+        "token_usage": debug_info.get("token_usage"),
+    }
 
     # Expected: { "actions": [...], "explanation": "..." }
     raw_actions: list[dict[str, Any]] = reply.get("actions") or []
     actions = merge_actions(raw_actions)
     explanation: str = reply.get("explanation", "")
+
+    action_groups = _build_action_groups(actions)
+
+    log["actions"] = {
+        "raw_actions": raw_actions,
+        "merged_actions": actions,
+        "raw_count": len(raw_actions),
+        "merged_count": len(actions),
+        "explanation": explanation,
+        "group_count": len(action_groups),
+    }
 
     _LOGGER.info(
         "Observability: actions_before_merge=%d, actions_after_merge=%d, elapsed=%.2fs",
@@ -402,14 +496,30 @@ async def call_model_wrapper(
         hass.bus.async_fire("llm_response_ready", {"payload": explanation})
 
     # --- Parallel action execution (Task 4) ---
-    action_groups = _build_action_groups(actions)
     group_sizes = [len(g) for g in action_groups]
     _LOGGER.info("Executing %d action groups; group sizes: %s", len(action_groups), group_sizes)
 
+    all_exec_results: list[dict[str, Any]] = []
+    t_exec_start = time.monotonic()
+
     for group in action_groups:
         if len(group) == 1:
-            await _execute_tool_call(hass, group[0], allow_cfg)
+            r = await _execute_tool_call(hass, group[0], allow_cfg)
+            all_exec_results.append(r)
         else:
-            await asyncio.gather(
+            results = await asyncio.gather(
                 *(_execute_tool_call(hass, a, allow_cfg) for a in group)
             )
+            all_exec_results.extend(results)
+
+    action_execution_time = round(time.monotonic() - t_exec_start, 4)
+
+    log["execution"] = all_exec_results
+    log["timing"] = {
+        "total_elapsed": round(time.monotonic() - t_start, 4),
+        "context_build_time": debug_info.get("context_build_time"),
+        "llm_api_call_time": debug_info.get("api_call_time"),
+        "action_execution_time": action_execution_time,
+    }
+
+    await hass.async_add_executor_job(write_log_entry, log)

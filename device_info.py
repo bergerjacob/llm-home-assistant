@@ -33,6 +33,7 @@ def _is_state_query(text: str) -> bool:
 # ---------------------------------------------------------------------------
 _CONTEXT_TTL = 30.0
 _compact_caches: dict[int, dict[str, Any]] = {}
+_last_cache_hit: dict[int, bool] = {}
 
 # Exclusion patterns (mirrored from call_openai.py to avoid circular import)
 _EXCLUDED_STATE_DOMAINS = {"zone", "update", "sun", "event"}
@@ -148,10 +149,12 @@ def build_compact_context(
         and cache["cfg_hash"] == cfg_h
     ):
         _LOGGER.debug("Compact context cache hit (age=%.2fs)", now - cache["ts"])
+        _last_cache_hit[hass_key] = True
         return cache["data"]
 
     if force_rebuild:
         _LOGGER.debug("Compact context force rebuild requested")
+    _last_cache_hit[hass_key] = False
 
     allow_cfg = allow_cfg or {}
     allowed_domains = set(allow_cfg.get("domains") or [])

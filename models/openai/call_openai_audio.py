@@ -5,6 +5,7 @@ import asyncio
 import json
 import logging
 import os
+import time
 from typing import Any
 
 from openai import OpenAI
@@ -53,8 +54,10 @@ def _blocking_audio_gpt_call(
     audio_b64: str,
     audio_format: str,
     model_name: str | None = None,
-) -> tuple[dict[str, Any], dict[str, int] | None]:
-    """Synchronous helper — runs in executor to avoid blocking the HA loop."""
+) -> tuple[dict[str, Any], dict[str, int] | None, dict[str, Any]]:
+    """Synchronous helper — runs in executor to avoid blocking the HA loop.
+    Returns (data, usage_info, debug_info).
+    """
     client = _get_client(api_key)
 
     if model_name and model_name != AUDIO_MODEL:
@@ -79,6 +82,7 @@ def _blocking_audio_gpt_call(
 
     _LOGGER.debug("Calling %s with audio (%s format)", AUDIO_MODEL, audio_format)
 
+    t0 = time.monotonic()
     response = client.chat.completions.create(
         model=AUDIO_MODEL,
         messages=messages,
@@ -86,44 +90,61 @@ def _blocking_audio_gpt_call(
         tools=[PROPOSE_ACTIONS_TOOL],
         tool_choice={"type": "function", "function": {"name": "propose_actions"}},
     )
+    api_call_time = time.monotonic() - t0
 
     usage_info = _extract_usage(response)
 
     choice = response.choices[0]
     tool_calls = choice.message.tool_calls
 
+    debug_info: dict[str, Any] = {
+        "system_prompt": system_prompt,
+        "model_used": AUDIO_MODEL,
+        "api_call_time": round(api_call_time, 4),
+    }
+
     if tool_calls:
         args_str = tool_calls[0].function.arguments
+        debug_info["raw_response"] = args_str
         try:
             plan = Plan.model_validate_json(args_str)
-            return plan.model_dump(), usage_info
+            debug_info["parse_success"] = True
+            debug_info["pydantic_valid"] = True
+            return plan.model_dump(), usage_info, debug_info
         except Exception as exc:
             _LOGGER.warning(
                 "Pydantic validation failed, trying raw JSON: %s", exc
             )
+            debug_info["pydantic_valid"] = False
             try:
                 raw = json.loads(args_str)
+                debug_info["parse_success"] = True
                 return {
                     "actions": raw.get("actions", []),
                     "explanation": raw.get("explanation", ""),
-                }, usage_info
+                }, usage_info, debug_info
             except json.JSONDecodeError as je:
                 _LOGGER.error("JSON decode failed for tool_call args: %s", je)
+                debug_info["parse_success"] = False
 
     # Fallback: try to parse text content
     content = choice.message.content or ""
+    debug_info["raw_response"] = debug_info.get("raw_response", content)
     if content:
         _LOGGER.warning("No tool_call returned; attempting text fallback parse")
         try:
             plan = Plan.model_validate_json(content)
-            return plan.model_dump(), usage_info
+            debug_info["parse_success"] = True
+            debug_info["pydantic_valid"] = True
+            return plan.model_dump(), usage_info, debug_info
         except Exception:
-            pass
+            debug_info["parse_success"] = False
+            debug_info["pydantic_valid"] = False
 
     return {
         "actions": [],
         "explanation": content or "Audio model returned no actionable response.",
-    }, usage_info
+    }, usage_info, debug_info
 
 
 async def async_query_openai_audio(
@@ -142,6 +163,7 @@ async def async_query_openai_audio(
     _LOGGER.debug("Preparing audio call (model: %s)", AUDIO_MODEL)
 
     # Build compact context on the event loop (uses async_all / async_render)
+    t_ctx = time.monotonic()
     try:
         from ...device_info import build_compact_context
         hass_context_text = build_compact_context(hass, allow_cfg, force_rebuild=force_rebuild)
@@ -149,13 +171,14 @@ async def async_query_openai_audio(
     except Exception as exc:
         _LOGGER.error("Failed to build HA context: %s", exc)
         return {"actions": [], "explanation": f"Failed to build HA context: {exc}"}
+    context_build_time = round(time.monotonic() - t_ctx, 4)
 
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(context=hass_context_text)
 
     loop = asyncio.get_running_loop()
 
     try:
-        data, usage_info = await loop.run_in_executor(
+        data, usage_info, debug_info = await loop.run_in_executor(
             None,
             _blocking_audio_gpt_call,
             api_key,
@@ -165,6 +188,14 @@ async def async_query_openai_audio(
             audio_format,
             model_name,
         )
+
+        # Attach debug info for the interaction logger
+        data["_debug_info"] = debug_info
+        data["_debug_info"]["context_build_time"] = context_build_time
+        data["_debug_info"]["context_size_chars"] = len(hass_context_text)
+        data["_debug_info"]["compact_context_packet"] = hass_context_text
+        if usage_info:
+            data["_debug_info"]["token_usage"] = usage_info
 
         if usage_info:
             cache_info = ""
