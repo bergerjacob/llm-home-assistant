@@ -24,9 +24,6 @@ from .tool_defs import PROPOSE_ACTIONS_TOOL
 _LOGGER = logging.getLogger(__name__)
 
 AUDIO_MODEL = "gpt-4o-audio-preview"
-_AUDIO_TOKEN_CAP = 280
-_AUDIO_RETRY_CAP = 500
-_FIX_JSON_MSG = "Fix JSON: return ONLY valid JSON for the required schema. No prose."
 
 SYSTEM_PROMPT_TEMPLATE = """\
 You are a voice-controlled Home Assistant.
@@ -82,62 +79,24 @@ def _blocking_audio_gpt_call(
 
     _LOGGER.debug("Calling %s with audio (%s format)", AUDIO_MODEL, audio_format)
 
-    # --- First attempt with standard token cap ---
-    data, usage_info, retry_reason = _try_audio_call(
-        client, messages, _AUDIO_TOKEN_CAP,
-    )
-    if data is not None:
-        return data, usage_info
-
-    # --- Retry once with higher cap + fix-JSON system message ---
-    _LOGGER.warning("Audio token cap retry triggered (cap=%d) reason=%s", _AUDIO_RETRY_CAP, retry_reason)
-    retry_messages = list(messages) + [
-        {"role": "system", "content": _FIX_JSON_MSG},
-    ]
-    data, usage_info, _ = _try_audio_call(
-        client, retry_messages, _AUDIO_RETRY_CAP,
-    )
-    if data is not None:
-        return data, usage_info
-
-    return {
-        "actions": [],
-        "explanation": f"Audio failed after retry: {retry_reason}",
-    }, usage_info
-
-
-def _try_audio_call(
-    client: OpenAI,
-    messages: list[dict[str, Any]],
-    max_tokens: int,
-) -> tuple[dict[str, Any] | None, dict[str, int] | None, str]:
-    """
-    Single attempt at an audio OpenAI call.
-    Returns (data, usage_info, retry_reason). data is None if retry needed.
-    """
     response = client.chat.completions.create(
         model=AUDIO_MODEL,
         messages=messages,
         modalities=["text"],
         tools=[PROPOSE_ACTIONS_TOOL],
         tool_choice={"type": "function", "function": {"name": "propose_actions"}},
-        max_completion_tokens=max_tokens,
     )
 
     usage_info = _extract_usage(response)
 
-    # Check for truncation
     choice = response.choices[0]
-    if choice.finish_reason == "length":
-        return None, usage_info, "truncated"
-
     tool_calls = choice.message.tool_calls
 
     if tool_calls:
         args_str = tool_calls[0].function.arguments
         try:
             plan = Plan.model_validate_json(args_str)
-            return plan.model_dump(), usage_info, ""
+            return plan.model_dump(), usage_info
         except Exception as exc:
             _LOGGER.warning(
                 "Pydantic validation failed, trying raw JSON: %s", exc
@@ -147,10 +106,9 @@ def _try_audio_call(
                 return {
                     "actions": raw.get("actions", []),
                     "explanation": raw.get("explanation", ""),
-                }, usage_info, ""
+                }, usage_info
             except json.JSONDecodeError as je:
                 _LOGGER.error("JSON decode failed for tool_call args: %s", je)
-                return None, usage_info, f"parse_error: {je}"
 
     # Fallback: try to parse text content
     content = choice.message.content or ""
@@ -158,14 +116,14 @@ def _try_audio_call(
         _LOGGER.warning("No tool_call returned; attempting text fallback parse")
         try:
             plan = Plan.model_validate_json(content)
-            return plan.model_dump(), usage_info, ""
+            return plan.model_dump(), usage_info
         except Exception:
             pass
 
     return {
         "actions": [],
         "explanation": content or "Audio model returned no actionable response.",
-    }, usage_info, ""
+    }, usage_info
 
 
 async def async_query_openai_audio(

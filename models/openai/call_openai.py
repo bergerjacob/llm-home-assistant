@@ -259,11 +259,6 @@ def _save_cache_stats(usage_info: dict[str, Any]) -> None:
 # --------------------------------------------------------------------
 # INTERNAL: blocking call to OpenAI (run in executor)
 # --------------------------------------------------------------------
-_TEXT_TOKEN_CAP = 250
-_RETRY_TOKEN_CAP = 500
-_FIX_JSON_MSG = "Fix JSON: return ONLY valid JSON for the required schema. No prose."
-
-
 def _blocking_gpt_call(
     api_key: str | None,
     messages: list[dict[str, Any]],
@@ -273,7 +268,6 @@ def _blocking_gpt_call(
     """
     Synchronous helper that actually calls the OpenAI Chat Completions API.
     This is run in a background thread using run_in_executor.
-    Retries once on truncation or JSON parse failure with a higher token cap.
     """
     key = api_key or os.environ.get("OPENAI_API_KEY")
     if not key:
@@ -328,64 +322,26 @@ def _blocking_gpt_call(
         *messages,
     ]
 
-    # --- First attempt with standard token cap ---
-    data, usage_info, retry_reason = _try_gpt_call(
-        client, model, final_messages, _TEXT_TOKEN_CAP,
-    )
-    if data is not None:
-        return data, usage_info
-
-    # --- Retry once with higher cap + fix-JSON system message ---
-    _LOGGER.warning("Token cap retry triggered (cap=%d) reason=%s", _RETRY_TOKEN_CAP, retry_reason)
-    retry_messages = list(final_messages) + [
-        {"role": "system", "content": _FIX_JSON_MSG},
-    ]
-    data, usage_info, _ = _try_gpt_call(
-        client, model, retry_messages, _RETRY_TOKEN_CAP,
-    )
-    if data is not None:
-        return data, usage_info
-
-    # Both attempts failed
-    return {
-        "actions": [],
-        "explanation": f"Failed after retry: {retry_reason}",
-    }, usage_info
-
-
-def _try_gpt_call(
-    client: OpenAI,
-    model: str,
-    messages: list[dict[str, Any]],
-    max_tokens: int,
-) -> tuple[dict[str, Any] | None, dict[str, int] | None, str]:
-    """
-    Single attempt at an OpenAI chat completion.
-    Returns (data, usage_info, retry_reason).
-    data is None if the call should be retried.
-    """
     response = client.chat.completions.create(
         model=model,
-        messages=messages,
+        messages=final_messages,
         response_format={"type": "json_object"},
-        max_completion_tokens=max_tokens,
     )
 
     # Extract token usage
     usage_info = _extract_usage(response)
 
-    # Check for truncation
-    finish_reason = response.choices[0].finish_reason
-    if finish_reason == "length":
-        return None, usage_info, "truncated"
-
     content = response.choices[0].message.content
+
     try:
         plan = Plan.model_validate_json(content)
-        return plan.model_dump(), usage_info, ""
+        return plan.model_dump(), usage_info
     except Exception as e:
         _LOGGER.error("Failed to parse/validate JSON from model: %s; raw content: %s", e, content)
-        return None, usage_info, f"parse_error: {e}"
+        return {
+            "actions": [],
+            "explanation": f"Failed to parse JSON from model: {e}",
+        }, usage_info
 
 
 def _extract_usage(response: Any) -> dict[str, int] | None:

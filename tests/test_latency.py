@@ -1,7 +1,6 @@
 """Unit tests for latency reduction features.
 
 Covers:
-- Token cap retry logic (Task 1)
 - Client singleton (Task 2)
 - Model passthrough (Task 3)
 - Parallel action grouping (Task 4)
@@ -21,45 +20,6 @@ _parent = os.path.dirname(_repo)
 _pkg = os.path.basename(_repo)
 if _parent not in sys.path:
     sys.path.insert(0, _parent)
-
-
-# ===================================================================
-# Task 1: Token cap retry
-# ===================================================================
-
-exec(f"from {_pkg}.models.openai.call_openai import _TEXT_TOKEN_CAP, _RETRY_TOKEN_CAP, _FIX_JSON_MSG")
-_TEXT_TOKEN_CAP = locals()["_TEXT_TOKEN_CAP"]
-_RETRY_TOKEN_CAP = locals()["_RETRY_TOKEN_CAP"]
-_FIX_JSON_MSG = locals()["_FIX_JSON_MSG"]
-
-
-class TestTokenCapConstants:
-    """Verify token cap values are set correctly."""
-
-    def test_text_token_cap(self):
-        assert _TEXT_TOKEN_CAP == 250
-
-    def test_retry_token_cap(self):
-        assert _RETRY_TOKEN_CAP == 500
-
-    def test_fix_json_message_exists(self):
-        assert "JSON" in _FIX_JSON_MSG
-        assert len(_FIX_JSON_MSG) > 0
-
-
-exec(f"from {_pkg}.models.openai.call_openai_audio import _AUDIO_TOKEN_CAP, _AUDIO_RETRY_CAP")
-_AUDIO_TOKEN_CAP = locals()["_AUDIO_TOKEN_CAP"]
-_AUDIO_RETRY_CAP = locals()["_AUDIO_RETRY_CAP"]
-
-
-class TestAudioTokenCapConstants:
-    """Verify audio token cap values."""
-
-    def test_audio_token_cap(self):
-        assert _AUDIO_TOKEN_CAP == 280
-
-    def test_audio_retry_cap(self):
-        assert _AUDIO_RETRY_CAP == 500
 
 
 # ===================================================================
