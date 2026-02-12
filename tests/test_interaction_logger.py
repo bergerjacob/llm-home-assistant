@@ -15,11 +15,11 @@ _pkg = os.path.basename(_repo)
 if _parent not in sys.path:
     sys.path.insert(0, _parent)
 
-exec(f"from {_pkg}.interaction_logger import new_log_entry, write_log_entry, _LOG_DIR, _MAX_ENTRIES_PER_FILE, _MAX_DIR_SIZE_BYTES, _count_entries, _dir_size, _safe_serialize, _write_lock")
+exec(f"from {_pkg}.interaction_logger import new_log_entry, write_log_entry, _LOG_DIR, _MAX_ENTRIES_PER_FILE, _MAX_LOG_FILES, _count_entries, _cleanup_old_logs, _safe_serialize, _write_lock")
 new_log_entry = locals()["new_log_entry"]
 write_log_entry = locals()["write_log_entry"]
 _count_entries = locals()["_count_entries"]
-_dir_size = locals()["_dir_size"]
+_cleanup_old_logs = locals()["_cleanup_old_logs"]
 _safe_serialize = locals()["_safe_serialize"]
 
 exec(f"import {_pkg}.interaction_logger as _mod")
@@ -139,27 +139,49 @@ class TestMaxEntriesGuard:
 
 
 # ===================================================================
-# Max directory size guard
+# Old log file cleanup
 # ===================================================================
 
-class TestMaxDirSizeGuard:
-    def test_stops_when_dir_too_large(self, tmp_path):
-        _mod._LOG_DIR = str(tmp_path)
-        old_max = _mod._MAX_DIR_SIZE_BYTES
-        _mod._MAX_DIR_SIZE_BYTES = 100  # very small
+class TestCleanupOldLogs:
+    def test_deletes_oldest_files_beyond_limit(self, tmp_path):
+        # Create 10 fake log files with sequential dates
+        for i in range(10):
+            (tmp_path / f"interactions_2026-01-{i+1:02d}.json").write_text("{}")
+
+        old_max = _mod._MAX_LOG_FILES
+        _mod._MAX_LOG_FILES = 3
         try:
-            entry = new_log_entry()
-            entry["request"] = {"data": "x" * 200}
-            write_log_entry(entry)  # Should succeed (first write)
-
-            write_log_entry(new_log_entry())  # Should be skipped
-
-            files = list(tmp_path.iterdir())
-            assert len(files) == 1
-            assert _count_entries(str(files[0])) == 1
+            _cleanup_old_logs(str(tmp_path))
+            remaining = sorted(f.name for f in tmp_path.iterdir())
+            assert len(remaining) == 3
+            # Should keep the 3 newest (sorted last)
+            assert remaining == [
+                "interactions_2026-01-08.json",
+                "interactions_2026-01-09.json",
+                "interactions_2026-01-10.json",
+            ]
         finally:
-            _mod._MAX_DIR_SIZE_BYTES = old_max
-            _mod._LOG_DIR = _DEFAULT_LOG_DIR
+            _mod._MAX_LOG_FILES = old_max
+
+    def test_no_delete_when_under_limit(self, tmp_path):
+        (tmp_path / "interactions_2026-01-01.json").write_text("{}")
+        (tmp_path / "interactions_2026-01-02.json").write_text("{}")
+        _cleanup_old_logs(str(tmp_path))
+        assert len(list(tmp_path.iterdir())) == 2
+
+    def test_ignores_non_log_files(self, tmp_path):
+        (tmp_path / "interactions_2026-01-01.json").write_text("{}")
+        (tmp_path / "other_file.txt").write_text("keep me")
+
+        old_max = _mod._MAX_LOG_FILES
+        _mod._MAX_LOG_FILES = 1
+        try:
+            _cleanup_old_logs(str(tmp_path))
+            remaining = [f.name for f in tmp_path.iterdir()]
+            assert "other_file.txt" in remaining
+            assert "interactions_2026-01-01.json" in remaining
+        finally:
+            _mod._MAX_LOG_FILES = old_max
 
 
 # ===================================================================
@@ -241,7 +263,7 @@ class TestThreadSafety:
 
 
 # ===================================================================
-# _count_entries / _dir_size helpers
+# _count_entries helper
 # ===================================================================
 
 class TestHelpers:
@@ -262,11 +284,3 @@ class TestHelpers:
             assert _count_entries(str(files[0])) == 3
         finally:
             _mod._LOG_DIR = _DEFAULT_LOG_DIR
-
-    def test_dir_size_empty(self, tmp_path):
-        assert _dir_size(str(tmp_path)) == 0
-
-    def test_dir_size_with_files(self, tmp_path):
-        (tmp_path / "a.txt").write_text("hello")
-        (tmp_path / "b.txt").write_text("world!")
-        assert _dir_size(str(tmp_path)) == 11

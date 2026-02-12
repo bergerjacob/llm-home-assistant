@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import stat
 import threading
 from datetime import datetime, timezone
 from typing import Any
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _LOG_DIR = os.path.join(os.path.dirname(__file__), "_logs")
 _MAX_ENTRIES_PER_FILE = 500
-_MAX_DIR_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB
+_MAX_LOG_FILES = 7  # keep at most 7 days of logs
 _write_lock = threading.Lock()
 
 
@@ -33,17 +34,19 @@ def new_log_entry() -> dict[str, Any]:
     }
 
 
-def _dir_size(path: str) -> int:
-    """Return total bytes of all files in *path* (non-recursive)."""
-    total = 0
+def _cleanup_old_logs(log_dir: str) -> None:
+    """Delete oldest log files if more than _MAX_LOG_FILES exist."""
     try:
-        for f in os.listdir(path):
-            fp = os.path.join(path, f)
-            if os.path.isfile(fp):
-                total += os.path.getsize(fp)
+        files = sorted(
+            (f for f in os.listdir(log_dir) if f.startswith("interactions_") and f.endswith(".json")),
+        )
+        while len(files) > _MAX_LOG_FILES:
+            oldest = files.pop(0)
+            path = os.path.join(log_dir, oldest)
+            os.remove(path)
+            _LOGGER.info("Deleted old log file: %s", oldest)
     except OSError:
         pass
-    return total
 
 
 def _count_entries(path: str) -> int:
@@ -74,11 +77,10 @@ def write_log_entry(entry: dict[str, Any]) -> None:
     try:
         with _write_lock:
             os.makedirs(_LOG_DIR, exist_ok=True)
+            os.chmod(_LOG_DIR, 0o777)
 
-            # Check total directory size
-            if _dir_size(_LOG_DIR) >= _MAX_DIR_SIZE_BYTES:
-                _LOGGER.warning("Interaction log dir exceeds %d MB — skipping write", _MAX_DIR_SIZE_BYTES // (1024 * 1024))
-                return
+            # Delete oldest log files beyond the retention limit
+            _cleanup_old_logs(_LOG_DIR)
 
             today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
             filename = f"interactions_{today}.json"
@@ -89,12 +91,15 @@ def write_log_entry(entry: dict[str, Any]) -> None:
                 _LOGGER.warning("Log file %s reached %d entries — skipping write", filename, _MAX_ENTRIES_PER_FILE)
                 return
 
+            new_file = not os.path.exists(filepath)
             block = json.dumps(entry, default=_safe_serialize, ensure_ascii=False, indent=2)
             with open(filepath, "a", encoding="utf-8") as f:
                 # Separator between entries
-                if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+                if not new_file and os.path.getsize(filepath) > 0:
                     f.write("\n")
                 f.write(block + "\n")
+            if new_file:
+                os.chmod(filepath, 0o666)
 
     except Exception:
         _LOGGER.exception("Failed to write interaction log entry")
