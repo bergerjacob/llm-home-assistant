@@ -346,14 +346,14 @@ async def call_model_wrapper(
     if not openai_api_key:
         _LOGGER.error("No OpenAI API key available; aborting OpenAI request.")
         log["error"] = "no API key"
-        await hass.async_add_executor_job(write_log_entry, log)
+        hass.async_add_executor_job(write_log_entry, log)
         return
 
     # Only process OpenAI requests through the OpenAI handler
     if model_name not in ("openai", "gpt-4o", "gpt-4o-mini", "gpt-5-mini", "gpt-4o-audio-preview"):
         _LOGGER.warning("Model '%s' is not handled by OpenAI handler, skipping", model_name)
         log["error"] = f"unsupported model: {model_name}"
-        await hass.async_add_executor_job(write_log_entry, log)
+        hass.async_add_executor_job(write_log_entry, log)
         return
 
     # "openai" is a handler type, not a real model name — pass None so
@@ -432,7 +432,7 @@ async def call_model_wrapper(
             sensor_entity.update_response(f"Error: {exc}")
         log["error"] = str(exc)
         log["timing"]["total_elapsed"] = round(time.monotonic() - t_start, 4)
-        await hass.async_add_executor_job(write_log_entry, log)
+        hass.async_add_executor_job(write_log_entry, log)
         return
 
     # --- Extract debug info attached by the OpenAI callers ---
@@ -522,4 +522,4 @@ async def call_model_wrapper(
         "action_execution_time": action_execution_time,
     }
 
-    await hass.async_add_executor_job(write_log_entry, log)
+    hass.async_add_executor_job(write_log_entry, log)
