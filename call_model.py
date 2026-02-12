@@ -306,6 +306,11 @@ async def call_model_wrapper(
         _LOGGER.warning("Model '%s' is not handled by OpenAI handler, skipping", model_name)
         return
 
+    # "openai" is a handler type, not a real model name — pass None so
+    # the OpenAI callers use their hardcoded default (OPENAI_MODEL).
+    if model_name == "openai":
+        model_name = None
+
     session = async_get_clientsession(hass)
     t_start = time.monotonic()
 
