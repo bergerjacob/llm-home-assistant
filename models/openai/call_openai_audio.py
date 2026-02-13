@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from .call_openai import (
     Action,
     Plan,
+    _normalize_actions,
     _save_cache_stats,
     _get_client,
     _extract_usage,
@@ -109,7 +110,9 @@ def _blocking_audio_gpt_call(
         args_str = tool_calls[0].function.arguments
         debug_info["raw_response"] = args_str
         try:
-            plan = Plan.model_validate_json(args_str)
+            raw = json.loads(args_str)
+            raw = _normalize_actions(raw)
+            plan = Plan.model_validate(raw)
             debug_info["parse_success"] = True
             debug_info["pydantic_valid"] = True
             return plan.model_dump(), usage_info, debug_info
@@ -120,6 +123,7 @@ def _blocking_audio_gpt_call(
             debug_info["pydantic_valid"] = False
             try:
                 raw = json.loads(args_str)
+                raw = _normalize_actions(raw)
                 debug_info["parse_success"] = True
                 return {
                     "actions": raw.get("actions", []),
@@ -135,7 +139,9 @@ def _blocking_audio_gpt_call(
     if content:
         _LOGGER.warning("No tool_call returned; attempting text fallback parse")
         try:
-            plan = Plan.model_validate_json(content)
+            raw = json.loads(content)
+            raw = _normalize_actions(raw)
+            plan = Plan.model_validate(raw)
             debug_info["parse_success"] = True
             debug_info["pydantic_valid"] = True
             return plan.model_dump(), usage_info, debug_info

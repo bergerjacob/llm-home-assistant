@@ -58,6 +58,23 @@ class Plan(BaseModel):
     actions: list[Action]
     explanation: str
 
+
+_ACTION_KEYS = {"domain", "service", "entity_id", "data"}
+
+
+def _normalize_actions(raw: dict[str, Any]) -> dict[str, Any]:
+    """Move misplaced action-level keys (rgb_color, brightness, etc.) into data."""
+    for action in raw.get("actions", []):
+        if not isinstance(action, dict):
+            continue
+        extras = {k: v for k, v in action.items() if k not in _ACTION_KEYS}
+        if extras:
+            data = action.setdefault("data", {})
+            for k, v in extras.items():
+                data[k] = v
+                del action[k]
+    return raw
+
 # -----------------------------------------------------------------------------
 # Hardcoded Exclusions (Masking)
 # -----------------------------------------------------------------------------
@@ -292,7 +309,7 @@ def _blocking_gpt_call(
         '      "domain": "light",\n'
         '      "service": "turn_on",\n'
         '      "entity_id": ["light.room1", "light.room2"],\n'
-        '      "data": {"brightness": 220}\n'
+        '      "data": {"brightness": 220, "rgb_color": [255,180,100]}\n'
         "    }\n"
         "  ],\n"
         '  "explanation": "Short summary"\n'
@@ -347,7 +364,9 @@ def _blocking_gpt_call(
     }
 
     try:
-        plan = Plan.model_validate_json(content)
+        raw = json.loads(content)
+        raw = _normalize_actions(raw)
+        plan = Plan.model_validate(raw)
         debug_info["parse_success"] = True
         debug_info["pydantic_valid"] = True
         return plan.model_dump(), usage_info, debug_info
