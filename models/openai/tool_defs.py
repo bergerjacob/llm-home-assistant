@@ -34,10 +34,16 @@ PROPOSE_ACTIONS_TOOL = {
                             },
                             "data": {
                                 "type": "object",
-                                "description": "Optional service data dict.",
+                                "description": (
+                                    "Service data. ALL parameters go here: "
+                                    "brightness (0-255), rgb_color ([R,G,B] 0-255), "
+                                    "color_temp, transition, etc. "
+                                    "Example: {\"brightness\": 200, \"rgb_color\": [255, 0, 0]}"
+                                ),
                             },
                         },
-                        "required": ["domain", "service", "entity_id"],
+                        "required": ["domain", "service", "entity_id", "data"],
+                        "additionalProperties": False,
                     },
                 },
                 "explanation": {
