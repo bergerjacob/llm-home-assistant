@@ -33,7 +33,8 @@ The user is speaking a command. Understand their spoken request and call the
 
 Rules:
 - IMPORTANT: Use specific domain services like `light.turn_on`, NOT `homeassistant.turn_on`.
-- For colors, ALWAYS use `rgb_color` as [R, G, B] (0-255). NEVER use xy_color or hs_color.
+- For ALL color/temperature changes, ALWAYS use `rgb_color` as [R,G,B] (0-255). NEVER use xy_color, hs_color, or color_temp.
+  Examples: warm white=[255,180,100], cool white=[200,220,255], sky blue=[135,206,235], red=[255,0,0].
 - Batch multiple targets into one action with an entity_id list when they share the same service and data.
 - entity_id can be a single string or a list of strings.
 - Max 3 actions per request. Prefer 1. Keep explanation under 15 words.
