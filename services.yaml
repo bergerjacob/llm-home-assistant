@@ -33,4 +33,3 @@ process_audio_direct:
     Send the recorded WAV file directly to gpt-4o-audio-preview in a single
     API call, bypassing the whisper.cpp transcription step. Called automatically
     by stop_recording.
-

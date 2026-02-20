@@ -119,6 +119,56 @@ def _entity_to_compact(entity_id: str, state, attrs: dict, area: str | None) -> 
         dc = attrs.get("device_class")
         if dc:
             c["dc"] = dc
+    elif domain == "sensor":
+        unit = attrs.get("unit_of_measurement")
+        if unit:
+            c["unit"] = unit
+        dc = attrs.get("device_class")
+        if dc:
+            c["dc"] = dc
+    elif domain in ("input_number", "number"):
+        val = attrs.get("value")
+        if val is not None:
+            c["val"] = val
+        step = attrs.get("step")
+        if step is not None:
+            c["step"] = step
+        mn, mx = attrs.get("min"), attrs.get("max")
+        if mn is not None:
+            c["min"] = mn
+        if mx is not None:
+            c["max"] = mx
+    elif domain in ("input_select", "select"):
+        opts = attrs.get("options")
+        if opts:
+            c["opts"] = opts
+    elif domain == "timer":
+        rem = attrs.get("remaining")
+        if rem is not None:
+            c["rem"] = rem
+        fin = attrs.get("finishes_at")
+        if fin:
+            c["fin"] = fin
+    elif domain == "vacuum":
+        c["bat"] = attrs.get("battery_level")
+    elif domain == "water_heater":
+        c["cur_t"] = attrs.get("current_temperature")
+        c["tgt_t"] = attrs.get("temperature")
+        c["mode"] = attrs.get("operation_mode")
+    elif domain == "humidifier":
+        c["hum"] = attrs.get("humidity")
+        c["mode"] = attrs.get("mode")
+    elif domain == "valve":
+        c["pos"] = attrs.get("current_position")
+    elif domain == "media_player":
+        c["vol"] = attrs.get("volume_level")
+        c["mut"] = attrs.get("is_volume_muted")
+        c["title"] = attrs.get("media_title")
+    elif domain == "fan":
+        c["spd"] = attrs.get("speed")
+        sl = attrs.get("speed_list") or attrs.get("preset_modes")
+        if sl:
+            c["spd_opts"] = sl
 
     if area:
         c["area"] = area
@@ -285,8 +335,30 @@ async def get_all_device_states(hass: HomeAssistant) -> List[Dict[str, Any]]:
             elif domain == "alarm_control_panel":
                 device_info["code_format"] = attributes.get("code_format")
                 device_info["changed_by"] = attributes.get("changed_by")
+            elif domain == "binary_sensor":
+                device_info["device_class"] = attributes.get("device_class")
+            elif domain in ("input_number", "number"):
+                device_info["value"] = attributes.get("value")
+                device_info["min"] = attributes.get("min")
+                device_info["max"] = attributes.get("max")
+                device_info["step"] = attributes.get("step")
+            elif domain in ("input_select", "select"):
+                device_info["options"] = attributes.get("options")
+            elif domain == "timer":
+                device_info["remaining"] = attributes.get("remaining")
+                device_info["finishes_at"] = attributes.get("finishes_at")
+            elif domain == "vacuum":
+                device_info["battery_level"] = attributes.get("battery_level")
+            elif domain == "water_heater":
+                device_info["current_temperature"] = attributes.get("current_temperature")
+                device_info["temperature"] = attributes.get("temperature")
+                device_info["operation_mode"] = attributes.get("operation_mode")
+            elif domain == "humidifier":
+                device_info["humidity"] = attributes.get("humidity")
+                device_info["mode"] = attributes.get("mode")
+            elif domain == "valve":
+                device_info["current_position"] = attributes.get("current_position")
 
-            # Add any other relevant common attributes
             if "device_class" in attributes:
                 device_info["device_class"] = attributes["device_class"]
             if "icon" in attributes:

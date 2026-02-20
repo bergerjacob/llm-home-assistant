@@ -323,7 +323,10 @@ def _blocking_gpt_call(
         "- Max 3 actions per request. Prefer 1. Keep explanation under 15 words.\n"
         "- Use only entity_ids and services from the context below.\n\n"
         "CONTEXT KEY: e=entity_id, n=name, d=domain, s=state, b=brightness, "
-        "cm=color_modes, c=supports_color, pos=position, area=room.\n\n"
+        "cm=color_modes, c=supports_color, pos=position, area=room, dc=device_class, "
+        "unit=unit_of_measurement, val=value, rem=remaining, bat=battery_level, "
+        "vol=volume_level, mut=muted, title=media_title, spd=speed, spd_opts=speed_options, "
+        "hum=humidity, opts=options, min/max/step=range, fin=finishes_at.\n\n"
         f"HOME ASSISTANT CONTEXT:\n{hass_context_text}"
     )
 
