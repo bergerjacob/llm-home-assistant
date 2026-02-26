@@ -1,6 +1,7 @@
 console.log("LLM Recording Card: Loading...");
 
 const TRANSCRIPTION_ENTITY = 'llm_home_assistant.last_transcription';
+const RESPONSE_SENSOR = 'sensor.llm_ha_model_response';
 
 class LLMRecordingCard extends HTMLElement {
   constructor() {
@@ -30,6 +31,19 @@ class LLMRecordingCard extends HTMLElement {
     const outputText = this.shadowRoot.getElementById('outputText');
     if (!statusLine || !outputText) return;
 
+    // Check for automation output from the response sensor
+    const responseSensor = this._hass.states[RESPONSE_SENSOR];
+    const attrs = responseSensor ? responseSensor.attributes : {};
+    const isAutomationOutput = attrs.mode === 'automation';
+
+    if (isAutomationOutput && !this._processing) {
+      statusLine.textContent = responseSensor.state || 'Automation ready';
+      statusLine.className = 'status-line';
+      outputText.innerHTML = this._formatAutomationOutput(attrs);
+      outputText.className = 'output-text';
+      return;
+    }
+
     const state = this._hass.states[TRANSCRIPTION_ENTITY];
     const text = state && state.state ? String(state.state) : '';
     const minTimeElapsed = Date.now() >= this._processingMinEndTime;
@@ -41,20 +55,59 @@ class LLMRecordingCard extends HTMLElement {
         this._processingTickId = null;
         statusLine.textContent = 'Done';
         statusLine.className = 'status-line';
-        outputText.textContent = text;
+
+        // Check if automation result arrived
+        if (isAutomationOutput) {
+          outputText.innerHTML = this._formatAutomationOutput(attrs);
+        } else {
+          outputText.textContent = text;
+        }
         outputText.className = 'output-text';
       } else {
-        statusLine.textContent = 'Processing…';
+        statusLine.textContent = 'Processing\u2026';
         statusLine.className = 'status-line processing';
-        outputText.textContent = text || '—';
+        outputText.textContent = text || '\u2014';
         outputText.className = 'output-text muted';
       }
     } else {
       statusLine.className = 'status-line';
       statusLine.textContent = 'Ready';
-      outputText.textContent = text || '—';
+      outputText.textContent = text || '\u2014';
       outputText.className = text ? 'output-text' : 'output-text muted';
     }
+  }
+
+  _formatAutomationOutput(attrs) {
+    const yaml = attrs.automation_yaml || '(no YAML generated)';
+    const checklist = attrs.validation_checklist || [];
+    const questions = attrs.questions || [];
+
+    let html = '<strong>Automation YAML:</strong>\n<pre style="background:#f5f5f5;padding:8px;border-radius:4px;overflow-x:auto;font-size:12px;">' +
+      this._escapeHtml(yaml) + '</pre>';
+
+    if (checklist.length > 0) {
+      html += '\n<strong>Validation Checklist:</strong>\n<ul style="margin:4px 0;padding-left:20px;">';
+      for (const item of checklist) {
+        html += '<li>' + this._escapeHtml(item) + '</li>';
+      }
+      html += '</ul>';
+    }
+
+    if (questions.length > 0) {
+      html += '\n<strong>Questions:</strong>\n<ul style="margin:4px 0;padding-left:20px;">';
+      for (const item of questions) {
+        html += '<li>' + this._escapeHtml(item) + '</li>';
+      }
+      html += '</ul>';
+    }
+
+    return html;
+  }
+
+  _escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   render() {
@@ -71,6 +124,18 @@ class LLMRecordingCard extends HTMLElement {
         select, button { width: 100%; padding: 10px; margin: 5px 0; font-size: 16px; }
         .toggle-btn { background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; }
         .toggle-btn.recording { background: #f44336; }
+        .mode-toggle {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+        .mode-toggle input[type="checkbox"] {
+          width: 18px;
+          height: 18px;
+          margin: 0;
+        }
         .status-box {
           display: block;
           margin-top: 16px;
@@ -108,6 +173,13 @@ class LLMRecordingCard extends HTMLElement {
       </div>
 
       <div class="row">
+        <label class="mode-toggle">
+          <input type="checkbox" id="automationToggle" />
+          <span>Automation Builder</span>
+        </label>
+      </div>
+
+      <div class="row">
         <label for="modelSelect">LLM Model:</label>
         <select id="modelSelect">
           <option value="openai">OpenAI (GPT-4o)</option>
@@ -117,7 +189,7 @@ class LLMRecordingCard extends HTMLElement {
 
       <div class="status-box" id="statusBox">
         <div class="status-line" id="statusLine">Ready</div>
-        <div class="output-text muted" id="outputText">—</div>
+        <div class="output-text muted" id="outputText">\u2014</div>
       </div>
     `;
 
@@ -134,8 +206,11 @@ class LLMRecordingCard extends HTMLElement {
     const btn = this.shadowRoot.getElementById('toggleBtn');
     const isRecording = btn.classList.contains('recording');
     const service = isRecording ? 'stop_recording' : 'start_recording';
+    const mode = this.shadowRoot.getElementById('automationToggle').checked ? 'automation' : 'action';
+    // Only pass mode on stop_recording — start_recording doesn't need it
+    const serviceData = isRecording ? { mode: mode } : {};
 
-    this._hass.callService('llm_home_assistant', service, {}).then(() => {
+    this._hass.callService('llm_home_assistant', service, serviceData).then(() => {
       if (isRecording) {
         btn.classList.remove('recording');
         btn.textContent = 'Start Recording';

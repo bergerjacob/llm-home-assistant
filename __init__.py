@@ -289,7 +289,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
     # Register stop_recording service
     async def _stop_recording_service(call: ServiceCall):
         _LOGGER.info("=== STOP_RECORDING SERVICE ===")
-        
+        mode = call.data.get("mode", "action")
+        _LOGGER.info("Recording mode: %s", mode)
+
         try:
             from .text_audio_processing import stop_recording
             result = stop_recording()
@@ -308,7 +310,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 hass.services.async_call(
                     DOMAIN,
                     "process_audio_direct",
-                    {}
+                    {"mode": mode},
                 )
             )
         except Exception as e:
@@ -318,7 +320,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         DOMAIN,
         "stop_recording",
         _stop_recording_service,
-        schema=vol.Schema({})
+        schema=vol.Schema({vol.Optional("mode", default="action"): cv.string}),
     )
 
     async def _transcribe_and_store(call):
@@ -446,6 +448,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
     # ======================================================
     async def _process_audio_direct_service(call: ServiceCall):
         _LOGGER.info("=== PROCESS_AUDIO_DIRECT SERVICE ===")
+        mode = call.data.get("mode", "action")
+        _LOGGER.info("Audio direct mode: %s", mode)
 
         config_dir = hass.config.config_dir
         audio_path = os.path.join(
@@ -480,6 +484,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 model_name="gpt-4o-audio-preview",
                 audio_data=wav_bytes,
                 audio_format="wav",
+                automation_mode=(mode == "automation"),
             )
 
             # Save response to state (same as transcribe_audio path)
@@ -492,22 +497,26 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 "(audio-direct: transcription handled by model)",
             )
 
-            # Write response text for TTS
-            text_file = os.path.join(
-                config_dir,
-                "custom_components",
-                DOMAIN,
-                "_texts",
-                "response_text.txt",
-            )
-            await hass.async_add_executor_job(_write_file, text_file, state_str, "w")
-            _LOGGER.info("Saved sensor state to %s", text_file)
+            # Skip TTS for automation mode (structured data not suitable for speech)
+            if mode == "automation":
+                _LOGGER.info("Automation mode — skipping TTS")
+            else:
+                # Write response text for TTS
+                text_file = os.path.join(
+                    config_dir,
+                    "custom_components",
+                    DOMAIN,
+                    "_texts",
+                    "response_text.txt",
+                )
+                await hass.async_add_executor_job(_write_file, text_file, state_str, "w")
+                _LOGGER.info("Saved sensor state to %s", text_file)
 
-            # Call TTS
-            await hass.services.async_call(
-                DOMAIN, "tts_fallback", {}, blocking=False
-            )
-            _LOGGER.info("Called TTS fallback after audio-direct processing")
+                # Call TTS
+                await hass.services.async_call(
+                    DOMAIN, "tts_fallback", {}, blocking=False
+                )
+                _LOGGER.info("Called TTS fallback after audio-direct processing")
 
         except Exception as e:
             _LOGGER.error("Error in process_audio_direct: %s", e, exc_info=True)
@@ -516,7 +525,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
         DOMAIN,
         "process_audio_direct",
         _process_audio_direct_service,
-        schema=vol.Schema({}),
+        schema=vol.Schema({vol.Optional("mode", default="action"): cv.string}),
     )
     _LOGGER.info("Service 'process_audio_direct' registered")
 
