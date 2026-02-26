@@ -5,6 +5,7 @@ import asyncio
 import json
 import logging
 import os
+import threading
 import time
 from typing import Any
 
@@ -22,10 +23,32 @@ from .call_openai import (
     _extract_usage,
 )
 from .tool_defs import PROPOSE_ACTIONS_TOOL
+from openai import OpenAI
 
 _LOGGER = logging.getLogger(__name__)
 
+_client_lock = threading.Lock()
+_local_client: OpenAI | None = None
+
+
+def _get_local_client() -> OpenAI:
+    """Return a reusable OpenAI client for local server."""
+    global _local_client
+    with _client_lock:
+        if _local_client is None:
+            _local_client = OpenAI(
+                api_key="not-needed",
+                base_url=LOCAL_AUDIO_BASE_URL,
+            )
+            _LOGGER.debug("Created local audio client: %s", LOCAL_AUDIO_BASE_URL)
+        return _local_client
+
 AUDIO_MODEL = "gpt-4o-audio-preview"
+
+USE_LOCAL_AUDIO_MODEL = False
+
+LOCAL_AUDIO_BASE_URL = "http://127.0.0.1:8010/v1"
+LOCAL_AUDIO_MODEL = "/tmp/bergejac/models/models--Qwen--Qwen2-Audio-7B-Instruct/snapshots/0a095220c30b7b31434169c3086508ef3ea5bf0a/"
 
 SYSTEM_PROMPT_TEMPLATE = """\
 You are a voice-controlled Home Assistant.
@@ -61,13 +84,17 @@ def _blocking_audio_gpt_call(
     """Synchronous helper — runs in executor to avoid blocking the HA loop.
     Returns (data, usage_info, debug_info).
     """
-    client = _get_client(api_key)
-
-    if model_name and model_name != AUDIO_MODEL:
-        _LOGGER.info(
-            "Configured model=%s differs from audio model=%s; using %s",
-            model_name, AUDIO_MODEL, AUDIO_MODEL,
-        )
+    if USE_LOCAL_AUDIO_MODEL:
+        client = _get_local_client()
+        active_model = LOCAL_AUDIO_MODEL
+    else:
+        client = _get_client(api_key)
+        active_model = AUDIO_MODEL
+        if model_name and model_name != AUDIO_MODEL:
+            _LOGGER.info(
+                "Configured model=%s differs from audio model=%s; using %s",
+                model_name, AUDIO_MODEL, AUDIO_MODEL,
+            )
 
     # Build multimodal user content
     user_content: list[dict[str, Any]] = []
@@ -83,11 +110,11 @@ def _blocking_audio_gpt_call(
         {"role": "user", "content": user_content},
     ]
 
-    _LOGGER.debug("Calling %s with audio (%s format)", AUDIO_MODEL, audio_format)
+    _LOGGER.debug("Calling %s with audio (%s format)", active_model, audio_format)
 
     t0 = time.monotonic()
     response = client.chat.completions.create(
-        model=AUDIO_MODEL,
+        model=active_model,
         messages=messages,
         modalities=["text"],
         tools=[PROPOSE_ACTIONS_TOOL],
@@ -102,7 +129,7 @@ def _blocking_audio_gpt_call(
 
     debug_info: dict[str, Any] = {
         "system_prompt": system_prompt,
-        "model_used": AUDIO_MODEL,
+        "model_used": active_model,
         "api_call_time": round(api_call_time, 4),
     }
 
