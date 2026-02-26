@@ -69,10 +69,13 @@ class _FakeBaseModel:
     def __init_subclass__(cls, **kw): pass
     @classmethod
     def model_validate_json(cls, s): return cls()
+    @classmethod
+    def model_validate(cls, d): return cls()
     def model_dump(self): return {}
 
 pydantic.BaseModel = _FakeBaseModel
 pydantic.Field = lambda **kw: None
+pydantic.conlist = lambda item_type, **kw: list
 
 # ---- Now it's safe to import pytest and run ----
 

@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total_calls": 81,
-    "total_prompt_tokens": 72613,
+    "total_calls": 83,
+    "total_prompt_tokens": 74702,
     "total_cached_tokens": 0,
     "overall_cache_hit_rate": 0.0,
     "last_cache_hit_rate": 0.0
@@ -653,6 +653,22 @@
       "cached_tokens": 0,
       "completion_tokens": 712,
       "total_tokens": 1754,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T14:23:53.647722",
+      "prompt_tokens": 1041,
+      "cached_tokens": 0,
+      "completion_tokens": 571,
+      "total_tokens": 1612,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T14:24:36.485449",
+      "prompt_tokens": 1048,
+      "cached_tokens": 0,
+      "completion_tokens": 768,
+      "total_tokens": 1816,
       "cache_hit_rate": 0.0
     }
   ]

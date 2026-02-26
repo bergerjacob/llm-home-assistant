@@ -15,10 +15,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import ATTR_ENTITY_ID
 
-from .models.openai.call_openai import async_query_openai
-from .models.openai.call_openai_audio import async_query_openai_audio
+from .models.openai.call_openai import async_query_openai, async_query_openai_automation, NEEDS_CONTEXT
+from .models.openai.call_openai_audio import async_query_openai_audio, async_query_openai_audio_automation
 from .audio_utils import validate_audio, encode_audio_base64, normalize_format
-from .device_info import _is_state_query, _cfg_hash, _last_cache_hit
+from .device_info import _is_state_query, _cfg_hash, get_last_cache_hit
 from .interaction_logger import new_log_entry, write_log_entry
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +73,24 @@ def _all_cacheable(actions: list[dict[str, Any]]) -> bool:
         if svc not in _CACHEABLE_SERVICES:
             return False
     return True
+
+
+# ---------------------------------------------------------------------------
+# Automation mode detection
+# ---------------------------------------------------------------------------
+def _detect_automation_mode(text: str) -> tuple[bool, str]:
+    """Check if text starts with /automation or automation: prefix.
+
+    Returns (is_automation, cleaned_text).
+    """
+    if not text:
+        return False, text
+    stripped = text.strip()
+    if stripped.startswith("/automation "):
+        return True, stripped[len("/automation "):].strip()
+    if stripped.lower().startswith("automation:"):
+        return True, stripped[len("automation:"):].strip()
+    return False, text
 
 
 # ---------------------------------------------------------------------------
@@ -319,6 +337,7 @@ async def call_model_wrapper(
     *,
     audio_data: bytes | None = None,
     audio_format: str | None = None,
+    automation_mode: bool = False,
 ):
     """
     Main wrapper to process the user request.
@@ -364,6 +383,14 @@ async def call_model_wrapper(
     session = async_get_clientsession(hass)
     t_start = time.monotonic()
 
+    # Detect automation mode before any other processing
+    text_auto, clean_text = _detect_automation_mode(text or "")
+    if text_auto:
+        automation_mode = True
+        text = clean_text
+    if automation_mode:
+        _LOGGER.info("Automation mode enabled (source=%s)", "text_prefix" if text_auto else "explicit_flag")
+
     # Detect state queries → force context rebuild for fresh data
     force_rebuild = _is_state_query(text) if text else False
     state_query_detected = force_rebuild
@@ -371,7 +398,37 @@ async def call_model_wrapper(
     response_cache_hit = False
 
     try:
-        if audio_data is not None:
+        if automation_mode and audio_data is not None:
+            # --- Audio automation builder path ---
+            fmt = normalize_format(audio_format or "wav")
+            validate_audio(audio_data, fmt)
+            audio_b64 = encode_audio_base64(audio_data)
+            _LOGGER.info("Audio automation path: %d bytes, format=%s", len(audio_data), fmt)
+
+            reply = await async_query_openai_audio_automation(
+                hass=hass,
+                session=session,
+                api_key=openai_api_key,
+                audio_b64=audio_b64,
+                audio_format=fmt,
+                user_text=text if text else None,
+                allow_cfg=allow_cfg,
+                model_name=model_name,
+                force_rebuild=False,
+            )
+        elif automation_mode:
+            # --- Text automation builder path ---
+            messages = [{"role": "user", "content": text}]
+            reply = await async_query_openai_automation(
+                hass=hass,
+                session=session,
+                api_key=openai_api_key,
+                messages=messages,
+                allow_cfg=allow_cfg,
+                model_name=model_name,
+                force_rebuild=force_rebuild,
+            )
+        elif audio_data is not None:
             # --- Audio-direct path (no response cache) ---
             fmt = normalize_format(audio_format or "wav")
             validate_audio(audio_data, fmt)
@@ -429,16 +486,75 @@ async def call_model_wrapper(
         # Update sensor with error
         sensor_entity = data_store.get("sensor_entity")
         if sensor_entity:
-            sensor_entity.update_response(f"Error: {exc}")
+            if automation_mode:
+                sensor_entity.update_automation_response(f"Error: {exc}")
+            else:
+                sensor_entity.update_response(f"Error: {exc}")
         log["error"] = str(exc)
         log["timing"]["total_elapsed"] = round(time.monotonic() - t_start, 4)
+        hass.async_add_executor_job(write_log_entry, log)
+        return
+
+    # --- Automation mode early return ---
+    if automation_mode:
+        debug_info = reply.pop("_debug_info", {})
+        sensor_entity = data_store.get("sensor_entity")
+
+        if reply.get("_needs_context"):
+            # Context build failed
+            if sensor_entity:
+                sensor_entity.update_automation_response(reply["message"])
+            log["error"] = "needs_context"
+            log["timing"] = {"total_elapsed": round(time.monotonic() - t_start, 4)}
+            hass.async_add_executor_job(write_log_entry, log)
+            return
+
+        automation_yaml = reply.get("automation_yaml", "")
+        execution_plan = reply.get("execution_plan", {})
+        validation_checklist = reply.get("validation_checklist", [])
+        questions = reply.get("questions", [])
+
+        status = "Automation ready (questions)" if questions else "Automation ready"
+        _LOGGER.info(
+            "Automation output keys present: automation_yaml=%s",
+            bool(automation_yaml),
+        )
+
+        if sensor_entity:
+            sensor_entity.update_automation_response(
+                status,
+                automation_yaml=automation_yaml,
+                validation_checklist=validation_checklist,
+                questions=questions,
+            )
+
+        hass.bus.async_fire("llm_response_ready", {
+            "mode": "automation",
+            "automation_yaml": automation_yaml,
+            "execution_plan": execution_plan,
+            "validation_checklist": validation_checklist,
+            "questions": questions,
+        })
+
+        log["automation"] = {
+            "type": "audio_automation" if audio_data is not None else "text_automation",
+            "status": status,
+            "automation_yaml_length": len(automation_yaml),
+            "validation_checklist": validation_checklist,
+            "questions": questions,
+        }
+        log["timing"] = {
+            "total_elapsed": round(time.monotonic() - t_start, 4),
+            "context_build_time": debug_info.get("context_build_time"),
+            "llm_api_call_time": debug_info.get("api_call_time"),
+        }
         hass.async_add_executor_job(write_log_entry, log)
         return
 
     # --- Extract debug info attached by the OpenAI callers ---
     debug_info = reply.pop("_debug_info", {})
     hass_key = id(hass)
-    context_cache_hit = _last_cache_hit.get(hass_key, False)
+    context_cache_hit = get_last_cache_hit(hass_key)
 
     log["context"] = {
         "allowlist_config": allow_cfg,
