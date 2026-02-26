@@ -45,7 +45,7 @@ def _get_local_client() -> OpenAI:
 
 AUDIO_MODEL = "gpt-4o-audio-preview"
 
-USE_LOCAL_AUDIO_MODEL = False
+USE_LOCAL_AUDIO_MODEL = True
 
 LOCAL_AUDIO_BASE_URL = "http://127.0.0.1:8010/v1"
 LOCAL_AUDIO_MODEL = "/tmp/bergejac/models/models--Qwen--Qwen2-Audio-7B-Instruct/snapshots/0a095220c30b7b31434169c3086508ef3ea5bf0a/"
