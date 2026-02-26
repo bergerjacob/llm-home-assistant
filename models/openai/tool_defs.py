@@ -19,11 +19,11 @@ PROPOSE_ACTIONS_TOOL = {
                         "properties": {
                             "domain": {
                                 "type": "string",
-                                "description": "HA domain, e.g. 'light', 'switch'.",
+                                "description": "HA domain, e.g. 'light', 'switch', 'binary_sensor'.",
                             },
                             "service": {
                                 "type": "string",
-                                "description": "Service name, e.g. 'turn_on'.",
+                                "description": "Service name, e.g. 'turn_on', 'update'.",
                             },
                             "entity_id": {
                                 "description": "Target entity or list of entities.",

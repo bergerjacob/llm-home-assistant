@@ -100,7 +100,7 @@ EXCLUDED_SERVICES = {
     "scene.reload",
 }
 
-EXCLUDED_STATE_DOMAINS = {"zone", "update", "sun", "event"}
+EXCLUDED_STATE_DOMAINS = {"zone", "update", "sun", "event", "device_tracker", "person", "scene"}
 
 EXCLUDED_ENTITY_PATTERNS = [
     r".*\.llm_.*",
@@ -321,12 +321,14 @@ def _blocking_gpt_call(
         "- Batch multiple targets into one action with an entity_id list when they share the same service and data.\n"
         "- entity_id can be a single string or a list of strings.\n"
         "- Max 3 actions per request. Prefer 1. Keep explanation under 15 words.\n"
-        "- Use only entity_ids and services from the context below.\n\n"
+        "- Use only entity_ids and services from the context below.\n"
+        "- For binary_sensor entities, common services include: `binary_sensor.update` for state refresh.\n\n"
         "CONTEXT KEY: e=entity_id, n=name, d=domain, s=state, b=brightness, "
         "cm=color_modes, c=supports_color, pos=position, area=room, dc=device_class, "
         "unit=unit_of_measurement, val=value, rem=remaining, bat=battery_level, "
         "vol=volume_level, mut=muted, title=media_title, spd=speed, spd_opts=speed_options, "
-        "hum=humidity, opts=options, min/max/step=range, fin=finishes_at.\n\n"
+        "hum=humidity, opts=options, min/max/step=range, fin=finishes_at, "
+        "st=status, dc=device_class.\n\n"
         f"HOME ASSISTANT CONTEXT:\n{hass_context_text}"
     )
 

@@ -44,7 +44,7 @@ Rules:
 - For ambiguous names, pick the closest match from the entity list.
 - Always provide an explanation.
 
-Context key: e=entity_id, n=name, d=domain, s=state, b=brightness, cm=color_modes, c=supports_color, pos=position, area=room, dc=device_class, unit=unit_of_measurement, val=value, rem=remaining, bat=battery_level, vol=volume_level, mut=muted, title=media_title, spd=speed, spd_opts=speed_options, hum=humidity, opts=options, min/max/step=range, fin=finishes_at.
+Context key: e=entity_id, n=name, d=domain, s=state, b=brightness, cm=color_modes, c=supports_color, pos=position, area=room, dc=device_class, unit=unit_of_measurement, val=value, rem=remaining, bat=battery_level, vol=volume_level, mut=muted, title=media_title, spd=speed, spd_opts=speed_options, hum=humidity, opts=options, min/max/step=range, fin=finishes_at, st=status.
 
 HOME ASSISTANT CONTEXT:
 {context}"""

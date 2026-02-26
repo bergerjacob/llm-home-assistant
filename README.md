@@ -4,6 +4,8 @@ A Home Assistant custom integration that lets users control IoT devices via natu
 
 **Design Goals:** This project prioritizes **token savings and reduced latency** through whitelist-based entity filtering (`allow_cfg`). While safety via allowlists is a welcome benefit, the primary optimization target is context size reduction. Smaller context = fewer tokens = faster inference and lower costs.
 
+The integration supports **binary_sensor and sensor entities** natively, displaying their states, device classes, and relevant attributes to the LLM agent for decision-making. Sensors are properly masked and compressed in the compact context.
+
 ## Architecture
 
 ### Text Pipeline
@@ -153,13 +155,13 @@ llm_home_assistant:
   openai_api_key: !env_var OPENAI_API_KEY
   model: gpt-5-mini
   allow:
-    domains: ["light", "switch", "cover"]
-    services: ["light.turn_on", "light.turn_off", "switch.turn_on", "switch.turn_off"]
-    entities: ["light.kitchen", "light.living_room", "switch.bedroom"]
+    domains: ["light", "switch", "cover", "binary_sensor", "sensor"]
+    services: ["light.turn_on", "light.turn_off", "switch.turn_on", "switch.turn_off", "binary_sensor.update", "sensor.update"]
+    entities: ["light.kitchen", "light.living_room", "switch.bedroom", "binary_sensor.door", "binary_sensor.window", "sensor.temperature"]
 ```
 
-- **`domains`**: Only include entities from these domains (all other domains excluded)
-- **`services`**: Only allow these specific services to be called
+- **`domains`**: Only include entities from these domains (all other domains excluded). Common domains: `light`, `switch`, `cover`, `binary_sensor`, `sensor`, `climate`, `fan`, `lock`, `media_player`, `vacuum`, etc.
+- **`services`**: Only allow these specific services to be called (fail-closed: if allow_cfg is active, services MUST be explicitly listed)
 - **`entities`**: Only include these specific entity IDs in context
 
 If `allow` is omitted, no restrictions apply (backwards compatible). Using whitelist significantly reduces context size, lowering token usage and latency. Safety via restrictions is a beneficial side effect.
@@ -180,11 +182,11 @@ In HA **Developer Tools > Services**:
 - Service: `llm_home_assistant.chat`
 - Service data:
   ```yaml
-  text: "What devices are available?"
+  text: "What devices are available? Check door sensor status."
   ```
 - Click **Call Service**
 
-The text pipeline uses JSON mode with `gpt-5-mini` and `build_compact_context()` which applies whitelist filtering (via `allow_cfg`) to minimize context size. Check `sensor.llm_model_response` for the response.
+The text pipeline uses JSON mode with `gpt-5-mini` and `build_compact_context()` which applies whitelist filtering (via `allow_cfg`) to minimize context size. Check `sensor.llm_model_response` for the response. The context includes binary_sensor and sensor entities with their current states and device classes.
 
 ### Test the audio-direct pipeline
 

@@ -6,12 +6,12 @@ chat:
       name: Text
       description: User message to send to the LLM.
       required: true
-      example: "Turn on the kitchen light"
+      example: "Turn on the kitchen light or check door sensor status"
       selector:
         text:
     model:
       name: Model
-      description: The model to use (e.g., openai, llama3.3).
+      description: The model to use (e.g., openai, llama3.3, gpt-5-mini, gpt-4o-audio-preview for audio).
       required: false
       example: "openai"
       selector:
@@ -19,6 +19,8 @@ chat:
           options:
             - "openai"
             - "gpt-4o"
+            - "gpt-5-mini"
+            - "gpt-4o-audio-preview"
             - "llama3.3"
     context:
       name: Context
@@ -32,4 +34,4 @@ process_audio_direct:
   description: >-
     Send the recorded WAV file directly to gpt-4o-audio-preview in a single
     API call, bypassing the whisper.cpp transcription step. Called automatically
-    by stop_recording.
+    by stop_recording. Supports voice commands to control devices including sensors.

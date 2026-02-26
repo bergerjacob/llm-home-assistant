@@ -36,7 +36,7 @@ _compact_caches: dict[int, dict[str, Any]] = {}
 _last_cache_hit: dict[int, bool] = {}
 
 # Exclusion patterns (mirrored from call_openai.py to avoid circular import)
-_EXCLUDED_STATE_DOMAINS = {"zone", "update", "sun", "event"}
+_EXCLUDED_STATE_DOMAINS = {"zone", "update", "sun", "event", "device_tracker", "person", "scene"}
 _EXCLUDED_ENTITY_PATTERNS = [
     r".*\.llm_.*",
     r".*\.backup_.*",
@@ -119,6 +119,12 @@ def _entity_to_compact(entity_id: str, state, attrs: dict, area: str | None) -> 
         dc = attrs.get("device_class")
         if dc:
             c["dc"] = dc
+        st = state
+        if st is not None:
+            c["st"] = str(st)
+        area = attrs.get("area")
+        if area:
+            c["area"] = area
     elif domain == "sensor":
         unit = attrs.get("unit_of_measurement")
         if unit:
