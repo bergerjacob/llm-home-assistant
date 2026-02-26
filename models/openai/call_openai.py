@@ -13,7 +13,7 @@ from typing import Any, Dict, Union
 
 from openai import OpenAI
 import aiohttp
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, conlist
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service import async_get_all_descriptions
@@ -57,6 +57,82 @@ class Action(BaseModel):
 class Plan(BaseModel):
     actions: list[Action]
     explanation: str
+
+
+class AutomationOutput(BaseModel):
+    automation_yaml: str
+    execution_plan: Plan
+    validation_checklist: conlist(str, min_length=2, max_length=5)
+    questions: conlist(str, max_length=2)
+
+
+# ---------------------------------------------------------------------------
+# Automation Builder Mode
+# ---------------------------------------------------------------------------
+NEEDS_CONTEXT = "NEEDS_CONTEXT: compact context JSON was not provided by the system."
+
+AUTOMATION_SYSTEM_PROMPT_TEMPLATE = (
+    "You are an automation builder for Home Assistant.\n"
+    "The user will describe an automation they want. You MUST respond with ONLY valid JSON\n"
+    "matching this exact schema (no prose, no markdown):\n\n"
+    '{{\n'
+    '  "automation_yaml": "<valid HA automation YAML as a single string>",\n'
+    '  "execution_plan": {{\n'
+    '    "actions": [\n'
+    '      {{"domain": "light", "service": "turn_on", "entity_id": "light.kitchen", "data": {{}}}}\n'
+    '    ],\n'
+    '    "explanation": "Short summary of what the automation does"\n'
+    '  }},\n'
+    '  "validation_checklist": ["Item 1", "Item 2"],\n'
+    '  "questions": []\n'
+    '}}\n\n'
+    "RULES:\n"
+    "- automation_yaml: a complete, valid Home Assistant automation YAML string.\n"
+    "- execution_plan: the actions the automation would trigger, using the Plan schema.\n"
+    "- validation_checklist: 2-5 items the user should verify (triggers, conditions, entities).\n"
+    "- questions: 0-2 clarifying questions if the request is ambiguous. Empty list if clear.\n"
+    "- Use ONLY entity_ids and services from the context below.\n"
+    "- Use specific domain services (light.turn_on) NOT homeassistant.turn_on.\n\n"
+    "CONTEXT KEY: e=entity_id, n=name, d=domain, s=state, b=brightness, "
+    "cm=color_modes, c=supports_color, pos=position, area=room.\n\n"
+    "HOME ASSISTANT CONTEXT:\n{context}"
+)
+
+
+def _validate_automation_semantics(
+    output: dict,
+    context_json: str,
+) -> list[str]:
+    """Check execution_plan actions against compact context. Returns list of warnings."""
+    warnings: list[str] = []
+    try:
+        ctx = json.loads(context_json)
+    except (json.JSONDecodeError, TypeError):
+        warnings.append("Could not parse compact context for semantic validation")
+        return warnings
+
+    allowed_entities = {e["e"] for e in ctx.get("entities", []) if "e" in e}
+    allowed_services: set[str] = set()
+    for domain, svcs in ctx.get("services", {}).items():
+        for svc in svcs:
+            allowed_services.add(f"{domain}.{svc}")
+
+    exec_plan = output.get("execution_plan", {})
+    for action in exec_plan.get("actions", []):
+        svc_full = f"{action.get('domain', '')}.{action.get('service', '')}"
+        if svc_full not in allowed_services:
+            warnings.append(f"Disallowed service: {svc_full}")
+
+        eid = action.get("entity_id")
+        if eid:
+            eids = eid if isinstance(eid, list) else [eid]
+            for e in eids:
+                if e not in allowed_entities:
+                    warnings.append(f"Unknown entity: {e}")
+
+    if warnings:
+        _LOGGER.warning("Automation semantic warnings: %s", warnings)
+    return warnings
 
 
 _ACTION_KEYS = {"domain", "service", "entity_id", "data"}
@@ -485,4 +561,163 @@ async def async_query_openai(
         }
 
     _LOGGER.debug("OpenAI parsed response (actions): %s", data)
+    return data
+
+
+# --------------------------------------------------------------------
+# AUTOMATION MODE: blocking call + async wrapper
+# --------------------------------------------------------------------
+def _blocking_automation_gpt_call(
+    api_key: str | None,
+    messages: list[dict[str, Any]],
+    hass_context_text: str,
+    model_name: str | None = None,
+) -> tuple[dict[str, Any], dict[str, int] | None, dict[str, Any]]:
+    """Synchronous helper for automation mode. Returns (data, usage_info, debug_info)."""
+    key = api_key or os.environ.get("OPENAI_API_KEY")
+    if not key:
+        raise RuntimeError("No OpenAI API key provided.")
+
+    client = _get_client(key)
+    model = model_name or OPENAI_MODEL
+
+    system_content = AUTOMATION_SYSTEM_PROMPT_TEMPLATE.format(context=hass_context_text)
+    _LOGGER.debug("Automation system prompt length: %d chars", len(system_content))
+
+    final_messages: list[dict[str, Any]] = [
+        {"role": "system", "content": system_content},
+        *messages,
+    ]
+
+    t0 = time.monotonic()
+    response = client.chat.completions.create(
+        model=model,
+        messages=final_messages,
+        response_format={"type": "json_object"},
+    )
+    api_call_time = time.monotonic() - t0
+
+    usage_info = _extract_usage(response)
+    content = response.choices[0].message.content
+
+    debug_info: dict[str, Any] = {
+        "system_prompt": system_content,
+        "model_used": model,
+        "raw_response": content,
+        "api_call_time": round(api_call_time, 4),
+    }
+
+    def _try_parse(raw_text: str) -> dict[str, Any]:
+        raw = json.loads(raw_text)
+        validated = AutomationOutput.model_validate(raw)
+        return validated.model_dump()
+
+    try:
+        data = _try_parse(content)
+        debug_info["parse_success"] = True
+        debug_info["pydantic_valid"] = True
+    except Exception as first_err:
+        _LOGGER.warning("Automation parse failed, retrying: %s", first_err)
+        # Retry once with only the fix-up system message (no broken assistant output)
+        final_messages.append({
+            "role": "system",
+            "content": "Fix JSON: return ONLY valid JSON matching the AutomationOutput schema. No prose.",
+        })
+        try:
+            retry_resp = client.chat.completions.create(
+                model=model,
+                messages=final_messages,
+                response_format={"type": "json_object"},
+            )
+            retry_content = retry_resp.choices[0].message.content
+            debug_info["raw_response_retry"] = retry_content
+            data = _try_parse(retry_content)
+            debug_info["parse_success"] = True
+            debug_info["pydantic_valid"] = True
+        except Exception as retry_err:
+            _LOGGER.error("Automation retry also failed: %s", retry_err)
+            debug_info["parse_success"] = False
+            debug_info["pydantic_valid"] = False
+            return {
+                "automation_yaml": "",
+                "execution_plan": {"actions": [], "explanation": f"Parse failed: {retry_err}"},
+                "validation_checklist": [
+                    "LLM output could not be parsed into valid automation YAML",
+                    "Retry the request or simplify the automation description",
+                ],
+                "questions": [f"Parse error: {retry_err}"],
+            }, usage_info, debug_info
+
+    # Semantic validation — inject warnings into questions / checklist
+    sem_warnings = _validate_automation_semantics(data, hass_context_text)
+    if sem_warnings:
+        questions = data.get("questions", [])
+        checklist = data.get("validation_checklist", [])
+        for w in sem_warnings:
+            if len(questions) < 2:
+                questions.append(w)
+            else:
+                checklist.append(w)
+        data["questions"] = questions
+        data["validation_checklist"] = checklist
+
+    return data, usage_info, debug_info
+
+
+async def async_query_openai_automation(
+    hass: HomeAssistant,
+    session: aiohttp.ClientSession,
+    *,
+    api_key: str,
+    messages: list[dict[str, Any]],
+    allow_cfg: dict[str, Any] | None = None,
+    model_name: str | None = None,
+    force_rebuild: bool = False,
+) -> dict[str, Any]:
+    """Automation mode: build context, call GPT, return structured output."""
+    effective_model = model_name or OPENAI_MODEL
+    _LOGGER.info("Automation mode OpenAI call (model: %s)", effective_model)
+
+    # Build compact context on the event loop
+    t_ctx = time.monotonic()
+    try:
+        from ...device_info import build_compact_context
+        hass_context_text = build_compact_context(hass, allow_cfg, force_rebuild=force_rebuild)
+        _LOGGER.info("Compact context size: %d chars", len(hass_context_text))
+    except Exception as e:
+        _LOGGER.error("Failed to build HA context for automation: %s", e)
+        return {"_needs_context": True, "message": NEEDS_CONTEXT}
+
+    if not hass_context_text or not hass_context_text.strip():
+        _LOGGER.error("Compact context is empty for automation mode")
+        return {"_needs_context": True, "message": NEEDS_CONTEXT}
+
+    context_build_time = round(time.monotonic() - t_ctx, 4)
+
+    loop = asyncio.get_running_loop()
+    try:
+        data, usage_info, debug_info = await loop.run_in_executor(
+            None,
+            _blocking_automation_gpt_call,
+            api_key,
+            messages,
+            hass_context_text,
+            effective_model,
+        )
+
+        data["_debug_info"] = debug_info
+        data["_debug_info"]["context_build_time"] = context_build_time
+        data["_debug_info"]["context_size_chars"] = len(hass_context_text)
+        if usage_info:
+            data["_debug_info"]["token_usage"] = usage_info
+
+    except Exception as e:
+        _LOGGER.error("Automation OpenAI call failed: %s", e)
+        return {
+            "automation_yaml": "",
+            "execution_plan": {"actions": [], "explanation": f"Model call failed: {e}"},
+            "validation_checklist": [],
+            "questions": [],
+        }
+
     return data

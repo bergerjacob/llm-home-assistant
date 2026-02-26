@@ -35,6 +35,12 @@ _CONTEXT_TTL = 30.0
 _compact_caches: dict[int, dict[str, Any]] = {}
 _last_cache_hit: dict[int, bool] = {}
 
+
+def get_last_cache_hit(hass_key: int) -> bool:
+    """Return whether the last compact-context call for *hass_key* was a cache hit."""
+    return _last_cache_hit.get(hass_key, False)
+
+
 # Exclusion patterns (mirrored from call_openai.py to avoid circular import)
 _EXCLUDED_STATE_DOMAINS = {"zone", "update", "sun", "event"}
 _EXCLUDED_ENTITY_PATTERNS = [
