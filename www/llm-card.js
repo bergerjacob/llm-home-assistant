@@ -10,8 +10,9 @@ class LLMCard extends HTMLElement {
     const oldState = oldHass?.states[sensorEntity];
     const newState = hass.states[sensorEntity];
     
-    if (!oldState || oldState.state !== newState?.state || 
-        oldState.attributes?.full_text !== newState?.attributes?.full_text) {
+    if (!oldState || oldState.state !== newState?.state ||
+        oldState.attributes?.full_text !== newState?.attributes?.full_text ||
+        oldState.attributes?.automation_yaml !== newState?.attributes?.automation_yaml) {
       this.updateState();
     }
   }
@@ -205,24 +206,28 @@ class LLMCard extends HTMLElement {
     const attrs = stateObj.attributes || {};
     const isAutomationOutput = attrs.mode === 'automation';
 
+    if (isAutomationOutput) {
+      const yamlKey = attrs.automation_yaml || '';
+      if (yamlKey !== this._lastFullText) {
+        responseDiv.innerHTML = this._formatAutomationOutput(attrs);
+        this._lastFullText = yamlKey;
+        if (this._isLoading) {
+          this.setLoading(false);
+        }
+      }
+      return;
+    }
+
     const fullText = attrs.full_text || stateObj.state || '';
 
     if (fullText && fullText !== this._lastFullText) {
-      if (isAutomationOutput) {
-        responseDiv.innerHTML = this._formatAutomationOutput(attrs);
-      } else {
-        responseDiv.innerText = fullText;
-      }
+      responseDiv.innerText = fullText;
       this._lastFullText = fullText;
       if (this._isLoading) {
         this.setLoading(false);
       }
     } else if (this._isLoading && fullText && fullText !== (responseDiv.innerText || '')) {
-      if (isAutomationOutput) {
-        responseDiv.innerHTML = this._formatAutomationOutput(attrs);
-      } else {
-        responseDiv.innerText = fullText;
-      }
+      responseDiv.innerText = fullText;
       this._lastFullText = fullText;
       this.setLoading(false);
     }
