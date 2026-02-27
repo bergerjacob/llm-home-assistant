@@ -87,15 +87,44 @@ AUTOMATION_SYSTEM_PROMPT_TEMPLATE = (
     '  "questions": []\n'
     '}}\n\n'
     "RULES:\n"
-    "- automation_yaml: a complete, valid Home Assistant automation YAML string.\n"
+    "- automation_yaml: a complete, valid Home Assistant automation YAML string with trigger, condition, and action sections.\n"
     "- execution_plan: the actions the automation would trigger, using the Plan schema.\n"
     "- validation_checklist: 2-5 items the user should verify (triggers, conditions, entities).\n"
     "- questions: 0-2 clarifying questions if the request is ambiguous. Empty list if clear.\n"
     "- Use ONLY entity_ids and services from the context below.\n"
-    "- Use specific domain services (light.turn_on) NOT homeassistant.turn_on.\n\n"
+    "- Use specific domain services (light.turn_on) NOT homeassistant.turn_on.\n"
+    "- For binary_sensor triggers: use 'triggers:' (plural) with list item format { trigger: 'state', entity_id: 'entity.id', to: 'on' }.\n"
+    "- For syncing devices: use 'triggers:' with entity_id list, 'choose:' in actions with 'value_template' for state-based conditions.\n"
+    "- 'value_template' uses Jinja2 - access trigger state with: trigger.to_state.state.\n"
+    "- 'conditions: []' means no conditions (optional, omit or use empty list).\n"
+    "- 'default: []' in 'choose()' provides fallback when no condition sequences match.\n"
+    "- Always include 'triggers:' (plural) - never 'trigger:' (singular).\n"
+    "- 'conditions' section is optional - use empty list [] if no conditions needed.\n"
+    "- The resulting YAML should be installable as-is without user modification.\n\n"
     "CONTEXT KEY: e=entity_id, n=name, d=domain, s=state, b=brightness, "
-    "cm=color_modes, c=supports_color, pos=position, area=room.\n\n"
-    "HOME ASSISTANT CONTEXT:\n{context}"
+    "cm=color_modes, c=supports_color, pos=position, area=room, dc=device_class, "
+    "st=status, unit=unit_of_measurement, val=value, rem=remaining, bat=battery_level, "
+    "vol=volume_level, mut=muted, title=media_title, spd=speed, spd_opts=speed_options, "
+    "hum=humidity, opts=options, min/max/step=range, fin=finishes_at.\n\n"
+    "HOME ASSISTANT CONTEXT:\n{context}\n\n"
+    "NOTE: Write valid YAML only in 'automation_yaml'. Follow these patterns:\n\n"
+    "1. Basic state trigger (single entity):\n"
+    "   triggers: [{ trigger: 'state', entity_id: 'entity.id', to: 'on' }]\n"
+    "   actions: [{ target: {{ entity_id: 'entity.id' }}, action: 'domain.service' }}]\n\n"
+    "2. State trigger (multiple entities - for sync):\n"
+    "   triggers: [{ trigger: 'state', entity_id: ['entity1.id', 'entity2.id'] }]\n"
+    "   actions:\n"
+    "     - choose:\n"
+    "         - conditions: [{ condition: 'template', value_template: '{{ ... }}' }}]\n"
+    "           sequence:\n"
+    "             - target: {{ entity_id: ['entity1.id', 'entity2.id'] }}\n"
+    "               action: 'domain.service'\n"
+    "         default: []\n\n"
+    "3. Simple single action (no choose):\n"
+    "   actions: [{ target: {{ entity_id: 'entity.id' }}, action: 'domain.service' }}]\n\n"
+    "4. Template condition example:\n"
+    "   value_template: '{{ trigger.to_state is not none and trigger.to_state.state == ''on'' }}'\n"
+    "   value_template: '{{ trigger.to_state is not none and trigger.to_state.state == ''off'' }}'\n"
 )
 
 
@@ -588,6 +617,13 @@ def _blocking_automation_gpt_call(
 
     system_content = AUTOMATION_SYSTEM_PROMPT_TEMPLATE.format(context=hass_context_text)
     _LOGGER.debug("Automation system prompt length: %d chars", len(system_content))
+
+    try:
+        debug_path = os.path.join(os.path.dirname(__file__), "last_prompt.txt")
+        with open(debug_path, "w", encoding="utf-8") as f:
+            f.write(system_content)
+    except Exception as e:
+        _LOGGER.warning("Failed to write last_prompt.txt: %s", e)
 
     final_messages: list[dict[str, Any]] = [
         {"role": "system", "content": system_content},

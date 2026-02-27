@@ -1,60 +1,12 @@
 {
   "summary": {
-    "total_calls": 83,
-    "total_prompt_tokens": 74702,
+    "total_calls": 100,
+    "total_prompt_tokens": 75681,
     "total_cached_tokens": 0,
     "overall_cache_hit_rate": 0.0,
     "last_cache_hit_rate": 0.0
   },
   "history": [
-    {
-      "timestamp": "2026-02-10T18:32:16.480437",
-      "prompt_tokens": 20797,
-      "cached_tokens": 0,
-      "completion_tokens": 80,
-      "total_tokens": 20877,
-      "cache_hit_rate": 0.0
-    },
-    {
-      "timestamp": "2026-02-11T01:15:53.115439",
-      "prompt_tokens": 506,
-      "cached_tokens": 0,
-      "completion_tokens": 541,
-      "total_tokens": 1047,
-      "cache_hit_rate": 0.0
-    },
-    {
-      "timestamp": "2026-02-11T01:18:20.708768",
-      "prompt_tokens": 505,
-      "cached_tokens": 0,
-      "completion_tokens": 542,
-      "total_tokens": 1047,
-      "cache_hit_rate": 0.0
-    },
-    {
-      "timestamp": "2026-02-11T01:19:54.338768",
-      "prompt_tokens": 512,
-      "cached_tokens": 0,
-      "completion_tokens": 991,
-      "total_tokens": 1503,
-      "cache_hit_rate": 0.0
-    },
-    {
-      "timestamp": "2026-02-11T17:03:55.983165",
-      "prompt_tokens": 511,
-      "cached_tokens": 0,
-      "completion_tokens": 1735,
-      "total_tokens": 2246,
-      "cache_hit_rate": 0.0
-    },
-    {
-      "timestamp": "2026-02-11T17:03:58.806766",
-      "prompt_tokens": 506,
-      "cached_tokens": 0,
-      "completion_tokens": 544,
-      "total_tokens": 1050,
-      "cache_hit_rate": 0.0
-    },
     {
       "timestamp": "2026-02-11T17:04:55.914689",
       "prompt_tokens": 509,
@@ -669,6 +621,190 @@
       "cached_tokens": 0,
       "completion_tokens": 768,
       "total_tokens": 1816,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T14:29:18.841077",
+      "prompt_tokens": 1052,
+      "cached_tokens": 0,
+      "completion_tokens": 833,
+      "total_tokens": 1885,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T15:20:49.486485",
+      "prompt_tokens": 1042,
+      "cached_tokens": 0,
+      "completion_tokens": 780,
+      "total_tokens": 1822,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T15:51:42.069355",
+      "prompt_tokens": 1047,
+      "cached_tokens": 0,
+      "completion_tokens": 928,
+      "total_tokens": 1975,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T15:52:13.515543",
+      "prompt_tokens": 1047,
+      "cached_tokens": 0,
+      "completion_tokens": 1482,
+      "total_tokens": 2529,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T15:54:03.449171",
+      "prompt_tokens": 1047,
+      "cached_tokens": 0,
+      "completion_tokens": 737,
+      "total_tokens": 1784,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T15:54:43.078209",
+      "prompt_tokens": 1053,
+      "cached_tokens": 0,
+      "completion_tokens": 830,
+      "total_tokens": 1883,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T15:58:03.429042",
+      "prompt_tokens": 1053,
+      "cached_tokens": 0,
+      "completion_tokens": 702,
+      "total_tokens": 1755,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T16:40:28.665403",
+      "prompt_tokens": 1042,
+      "cached_tokens": 0,
+      "completion_tokens": 734,
+      "total_tokens": 1776,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T17:36:19.582463",
+      "prompt_tokens": 1149,
+      "cached_tokens": 0,
+      "completion_tokens": 221,
+      "total_tokens": 1370,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T17:38:12.180054",
+      "prompt_tokens": 1168,
+      "cached_tokens": 0,
+      "completion_tokens": 224,
+      "total_tokens": 1392,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T17:47:39.160220",
+      "prompt_tokens": 932,
+      "cached_tokens": 0,
+      "completion_tokens": 1698,
+      "total_tokens": 2630,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T17:57:18.171014",
+      "prompt_tokens": 1154,
+      "cached_tokens": 0,
+      "completion_tokens": 337,
+      "total_tokens": 1491,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T18:13:37.323413",
+      "prompt_tokens": 932,
+      "cached_tokens": 0,
+      "completion_tokens": 1303,
+      "total_tokens": 2235,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T18:15:02.025922",
+      "prompt_tokens": 1146,
+      "cached_tokens": 0,
+      "completion_tokens": 154,
+      "total_tokens": 1300,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T18:15:54.703066",
+      "prompt_tokens": 933,
+      "cached_tokens": 0,
+      "completion_tokens": 1303,
+      "total_tokens": 2236,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T18:17:00.297800",
+      "prompt_tokens": 932,
+      "cached_tokens": 0,
+      "completion_tokens": 2071,
+      "total_tokens": 3003,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-26T18:18:35.292647",
+      "prompt_tokens": 1155,
+      "cached_tokens": 0,
+      "completion_tokens": 290,
+      "total_tokens": 1445,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-27T14:27:17.249858",
+      "prompt_tokens": 930,
+      "cached_tokens": 0,
+      "completion_tokens": 1823,
+      "total_tokens": 2753,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-27T14:39:09.570841",
+      "prompt_tokens": 1004,
+      "cached_tokens": 0,
+      "completion_tokens": 1600,
+      "total_tokens": 2604,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-27T14:41:56.517258",
+      "prompt_tokens": 1004,
+      "cached_tokens": 0,
+      "completion_tokens": 1836,
+      "total_tokens": 2840,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-27T14:45:05.827155",
+      "prompt_tokens": 1157,
+      "cached_tokens": 0,
+      "completion_tokens": 1761,
+      "total_tokens": 2918,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-27T14:50:10.005087",
+      "prompt_tokens": 1158,
+      "cached_tokens": 0,
+      "completion_tokens": 3045,
+      "total_tokens": 4203,
+      "cache_hit_rate": 0.0
+    },
+    {
+      "timestamp": "2026-02-27T15:01:23.783471",
+      "prompt_tokens": 1179,
+      "cached_tokens": 0,
+      "completion_tokens": 2479,
+      "total_tokens": 3658,
       "cache_hit_rate": 0.0
     }
   ]
