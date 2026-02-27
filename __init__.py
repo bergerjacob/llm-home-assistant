@@ -44,6 +44,7 @@ SERVICE_CHAT_SCHEMA = vol.Schema(
         vol.Required("text"): cv.string,
         vol.Optional("context"): dict,
         vol.Optional("model"): cv.string,
+        vol.Optional("mode", default="action"): cv.string,
     }
 )
 
