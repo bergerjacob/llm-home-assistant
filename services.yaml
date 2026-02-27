@@ -22,6 +22,16 @@ chat:
             - "gpt-5-mini"
             - "gpt-4o-audio-preview"
             - "llama3.3"
+    mode:
+      name: Mode
+      description: '"action" (default) or "automation" for automation builder.'
+      required: false
+      default: "action"
+      selector:
+        select:
+          options:
+            - "action"
+            - "automation"
     context:
       name: Context
       description: Optional context object.

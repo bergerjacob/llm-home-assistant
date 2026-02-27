@@ -98,6 +98,20 @@ class LLMCard extends HTMLElement {
         cursor: not-allowed;
         opacity: 0.6;
       }
+      .mode-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--primary-text-color);
+      }
+      .mode-toggle input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+      }
       .response-container {
         background-color: var(--card-background-color, white);
         border: 1px solid var(--divider-color, #e0e0e0);
@@ -148,6 +162,10 @@ class LLMCard extends HTMLElement {
           <option value="openai">OpenAI (GPT-4o)</option>
           <option value="llama3.3">Llama 3.3</option>
         </select>
+        <label class="mode-toggle">
+          <input type="checkbox" id="automationToggle" />
+          <span>Automation Builder</span>
+        </label>
         <button id="submit-btn">
           <span class="btn-text">Ask</span>
           <div class="spinner" style="display: none;"></div>
@@ -177,27 +195,70 @@ class LLMCard extends HTMLElement {
 
   updateState() {
     if (!this.shadowRoot) return;
-    
+
     const sensorEntity = this.config?.response_entity || 'sensor.llm_ha_model_response';
     const stateObj = this._hass?.states[sensorEntity];
     const responseDiv = this.shadowRoot.getElementById('response-text');
-    
+
     if (!stateObj || !responseDiv) return;
-    
-    const fullText = stateObj.attributes?.full_text || stateObj.state || '';
-    const currentText = responseDiv.innerText || '';
-    
+
+    const attrs = stateObj.attributes || {};
+    const isAutomationOutput = attrs.mode === 'automation';
+
+    const fullText = attrs.full_text || stateObj.state || '';
+
     if (fullText && fullText !== this._lastFullText) {
-      responseDiv.innerText = fullText;
+      if (isAutomationOutput) {
+        responseDiv.innerHTML = this._formatAutomationOutput(attrs);
+      } else {
+        responseDiv.innerText = fullText;
+      }
       this._lastFullText = fullText;
       if (this._isLoading) {
         this.setLoading(false);
       }
-    } else if (this._isLoading && fullText && fullText !== currentText) {
-      responseDiv.innerText = fullText;
+    } else if (this._isLoading && fullText && fullText !== (responseDiv.innerText || '')) {
+      if (isAutomationOutput) {
+        responseDiv.innerHTML = this._formatAutomationOutput(attrs);
+      } else {
+        responseDiv.innerText = fullText;
+      }
       this._lastFullText = fullText;
       this.setLoading(false);
     }
+  }
+
+  _formatAutomationOutput(attrs) {
+    const yaml = attrs.automation_yaml || '(no YAML generated)';
+    const checklist = attrs.validation_checklist || [];
+    const questions = attrs.questions || [];
+
+    let html = '<strong>Automation YAML:</strong>\n<pre style="background:var(--secondary-background-color, #f5f5f5);padding:8px;border-radius:4px;overflow-x:auto;font-size:12px;">' +
+      this._escapeHtml(yaml) + '</pre>';
+
+    if (checklist.length > 0) {
+      html += '\n<strong>Validation Checklist:</strong>\n<ul style="margin:4px 0;padding-left:20px;">';
+      for (const item of checklist) {
+        html += '<li>' + this._escapeHtml(item) + '</li>';
+      }
+      html += '</ul>';
+    }
+
+    if (questions.length > 0) {
+      html += '\n<strong>Questions:</strong>\n<ul style="margin:4px 0;padding-left:20px;">';
+      for (const item of questions) {
+        html += '<li>' + this._escapeHtml(item) + '</li>';
+      }
+      html += '</ul>';
+    }
+
+    return html;
+  }
+
+  _escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
   setLoading(loading) {
@@ -221,8 +282,10 @@ class LLMCard extends HTMLElement {
   async submit() {
     const textInput = this.shadowRoot.getElementById('prompt-input');
     const modelSelect = this.shadowRoot.getElementById('model-select');
+    const automationToggle = this.shadowRoot.getElementById('automationToggle');
     const text = textInput.value;
     const model = modelSelect.value;
+    const mode = automationToggle.checked ? 'automation' : 'action';
 
     if (!text) return;
 
@@ -245,7 +308,8 @@ class LLMCard extends HTMLElement {
     try {
       await this._hass.callService('llm_home_assistant', 'chat', {
         text: text,
-        model: model
+        model: model,
+        mode: mode
       });
       
       let checkCount = 0;

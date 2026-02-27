@@ -109,9 +109,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
         """
         text: str = call.data["text"]
         model_name: str = call.data.get("model", default_model)
-        
+        mode: str = call.data.get("mode", "action")
+
         # Call the wrapper (moved to call_model.py)
-        await call_model_wrapper(hass, text, model_name)
+        await call_model_wrapper(hass, text, model_name, automation_mode=(mode == "automation"))
 
     # ======================================================
     # Service handler: llm_home_assistant.process_command (Legacy/Button)
