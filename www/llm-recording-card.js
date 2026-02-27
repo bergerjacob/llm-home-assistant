@@ -81,8 +81,21 @@ class LLMRecordingCard extends HTMLElement {
     const yaml = attrs.automation_yaml || '(no YAML generated)';
     const checklist = attrs.validation_checklist || [];
     const questions = attrs.questions || [];
+    const installSuccess = attrs.install_success || false;
+    const installMessage = attrs.install_message || '';
 
-    let html = '<strong>Automation YAML:</strong>\n<pre style="background:#f5f5f5;padding:8px;border-radius:4px;overflow-x:auto;font-size:12px;">' +
+    let html = '';
+
+    // Install status banner
+    if (installSuccess) {
+      html += '<div style="background:#c8e6c9;color:#2e7d32;padding:8px 12px;border-radius:4px;margin-bottom:8px;font-weight:500;">' +
+        this._escapeHtml(installMessage) + '</div>';
+    } else if (installMessage) {
+      html += '<div style="background:#fff3e0;color:#e65100;padding:8px 12px;border-radius:4px;margin-bottom:8px;font-weight:500;">' +
+        this._escapeHtml(installMessage) + '</div>';
+    }
+
+    html += '<strong>Automation YAML:</strong>\n<pre style="background:#f5f5f5;padding:8px;border-radius:4px;overflow-x:auto;font-size:12px;">' +
       this._escapeHtml(yaml) + '</pre>';
 
     if (checklist.length > 0) {

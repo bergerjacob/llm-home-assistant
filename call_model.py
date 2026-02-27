@@ -9,6 +9,8 @@ import logging
 import os
 import json
 import time
+import uuid
+import yaml
 from collections import OrderedDict
 from typing import Any
 from homeassistant.core import HomeAssistant
@@ -91,6 +93,60 @@ def _detect_automation_mode(text: str) -> tuple[bool, str]:
     if stripped.lower().startswith("automation:"):
         return True, stripped[len("automation:"):].strip()
     return False, text
+
+
+# ---------------------------------------------------------------------------
+# Automation installer
+# ---------------------------------------------------------------------------
+async def _install_automation(hass: HomeAssistant, automation_yaml_str: str) -> tuple[bool, str]:
+    """Parse automation YAML, append to automations.yaml, and reload.
+
+    Returns (success, message).
+    """
+    try:
+        auto_dict = yaml.safe_load(automation_yaml_str)
+    except yaml.YAMLError as exc:
+        _LOGGER.error("Failed to parse automation YAML: %s", exc)
+        return False, f"YAML parse error: {exc}"
+
+    if not isinstance(auto_dict, dict):
+        return False, "Automation YAML must be a mapping"
+
+    # Ensure id and alias are present
+    if "id" not in auto_dict:
+        auto_dict["id"] = f"llm_auto_{uuid.uuid4().hex[:12]}"
+    if "alias" not in auto_dict:
+        auto_dict["alias"] = f"LLM Automation {auto_dict['id']}"
+
+    automations_path = hass.config.path("automations.yaml")
+
+    # Read existing automations (or start empty list)
+    def _read_write():
+        try:
+            with open(automations_path, "r") as f:
+                existing = yaml.safe_load(f)
+        except FileNotFoundError:
+            existing = None
+
+        if not isinstance(existing, list):
+            existing = []
+
+        existing.append(auto_dict)
+
+        with open(automations_path, "w") as f:
+            yaml.safe_dump(existing, f, default_flow_style=False, sort_keys=False)
+
+    await hass.async_add_executor_job(_read_write)
+
+    # Reload automations so HA picks up the new one
+    try:
+        await hass.services.async_call("automation", "reload", blocking=True)
+    except Exception as exc:
+        _LOGGER.error("automation.reload failed: %s", exc)
+        return False, f"Saved but reload failed: {exc}"
+
+    _LOGGER.info("Automation installed: id=%s, alias=%s", auto_dict["id"], auto_dict.get("alias"))
+    return True, f"Automation installed (id: {auto_dict['id']})"
 
 
 # ---------------------------------------------------------------------------
@@ -514,10 +570,20 @@ async def call_model_wrapper(
         validation_checklist = reply.get("validation_checklist", [])
         questions = reply.get("questions", [])
 
-        status = "Automation ready (questions)" if questions else "Automation ready"
+        # Auto-install if YAML is present and no clarifying questions
+        install_success = False
+        install_message = ""
+        if automation_yaml and not questions:
+            install_success, install_message = await _install_automation(hass, automation_yaml)
+            status = install_message if install_success else f"Automation ready (install failed: {install_message})"
+        elif questions:
+            status = "Automation ready (questions)"
+        else:
+            status = "Automation ready"
+
         _LOGGER.info(
-            "Automation output keys present: automation_yaml=%s",
-            bool(automation_yaml),
+            "Automation output keys present: automation_yaml=%s, install_success=%s",
+            bool(automation_yaml), install_success,
         )
 
         if sensor_entity:
@@ -526,6 +592,8 @@ async def call_model_wrapper(
                 automation_yaml=automation_yaml,
                 validation_checklist=validation_checklist,
                 questions=questions,
+                install_success=install_success,
+                install_message=install_message,
             )
 
         hass.bus.async_fire("llm_response_ready", {
@@ -534,6 +602,8 @@ async def call_model_wrapper(
             "execution_plan": execution_plan,
             "validation_checklist": validation_checklist,
             "questions": questions,
+            "install_success": install_success,
+            "install_message": install_message,
         })
 
         log["automation"] = {
@@ -542,6 +612,8 @@ async def call_model_wrapper(
             "automation_yaml_length": len(automation_yaml),
             "validation_checklist": validation_checklist,
             "questions": questions,
+            "install_success": install_success,
+            "install_message": install_message,
         }
         log["timing"] = {
             "total_elapsed": round(time.monotonic() - t_start, 4),

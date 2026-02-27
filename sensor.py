@@ -69,7 +69,9 @@ class LLMResponseSensor(SensorEntity):
 
     def update_automation_response(self, status: str, *, automation_yaml: str = "",
                                     validation_checklist: list = None,
-                                    questions: list = None):
+                                    questions: list = None,
+                                    install_success: bool = False,
+                                    install_message: str = ""):
         """Update sensor for automation mode: short state + structured attributes."""
         self._attr_native_value = status
         self._attr_extra_state_attributes = {
@@ -77,7 +79,9 @@ class LLMResponseSensor(SensorEntity):
             "automation_yaml": automation_yaml,
             "validation_checklist": validation_checklist or [],
             "questions": questions or [],
+            "install_success": install_success,
+            "install_message": install_message,
         }
         self.async_schedule_update_ha_state()
-        _LOGGER.info("Updated sensor for automation mode (status: %s)", status)
+        _LOGGER.info("Updated sensor for automation mode (status: %s, installed: %s)", status, install_success)
 
