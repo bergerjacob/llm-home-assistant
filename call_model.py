@@ -598,7 +598,12 @@ async def call_model_wrapper(
             else:
                 status = f"Automation ready (install failed: {install_message})"
         else:
-            status = "Automation ready"
+            # Surface error from execution_plan if the LLM call failed silently
+            plan_explanation = execution_plan.get("explanation", "") if isinstance(execution_plan, dict) else ""
+            if "failed" in plan_explanation.lower() or "error" in plan_explanation.lower():
+                status = f"Automation error: {plan_explanation}"
+            else:
+                status = "Automation ready (no YAML generated)"
 
         _LOGGER.info(
             "Automation output keys present: automation_yaml=%s, install_success=%s",

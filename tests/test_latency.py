@@ -95,8 +95,8 @@ exec(f"from {_pkg}.models.openai.call_openai import _blocking_gpt_call, async_qu
 _blocking_gpt_call = locals()["_blocking_gpt_call"]
 async_query_openai = locals()["async_query_openai"]
 
-exec(f"from {_pkg}.models.openai.call_openai_audio import _blocking_audio_gpt_call, async_query_openai_audio")
-_blocking_audio_gpt_call = locals()["_blocking_audio_gpt_call"]
+exec(f"from {_pkg}.models.openai.call_openai_audio import _openai_blocking_audio_call, async_query_openai_audio")
+_blocking_audio_gpt_call = locals()["_openai_blocking_audio_call"]
 async_query_openai_audio = locals()["async_query_openai_audio"]
 
 import inspect
@@ -113,9 +113,9 @@ class TestModelPassthrough:
         sig = inspect.signature(async_query_openai)
         assert "model_name" in sig.parameters
 
-    def test_blocking_audio_gpt_call_has_model_name(self):
+    def test_blocking_audio_gpt_call_has_api_key(self):
         sig = inspect.signature(_blocking_audio_gpt_call)
-        assert "model_name" in sig.parameters
+        assert "api_key" in sig.parameters
 
     def test_async_query_openai_audio_has_model_name(self):
         sig = inspect.signature(async_query_openai_audio)
