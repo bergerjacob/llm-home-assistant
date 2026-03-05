@@ -103,14 +103,32 @@ async def _install_automation(hass: HomeAssistant, automation_yaml_str: str) -> 
 
     Returns (success, message).
     """
+    # Strip markdown code fences the LLM may wrap around the YAML
+    cleaned = automation_yaml_str.strip()
+    if cleaned.startswith("```"):
+        lines = cleaned.split("\n")
+        # Remove first line (```yaml or ```) and last line (```)
+        lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        cleaned = "\n".join(lines)
+
     try:
-        auto_dict = yaml.safe_load(automation_yaml_str)
+        auto_dict = yaml.safe_load(cleaned)
     except yaml.YAMLError as exc:
         _LOGGER.error("Failed to parse automation YAML: %s", exc)
         return False, f"YAML parse error: {exc}"
 
+    # Handle list (take first item) or single mapping
+    if isinstance(auto_dict, list):
+        if len(auto_dict) > 0 and isinstance(auto_dict[0], dict):
+            auto_dict = auto_dict[0]
+        else:
+            return False, "Automation YAML list is empty or invalid"
+
     if not isinstance(auto_dict, dict):
-        return False, "Automation YAML must be a mapping"
+        _LOGGER.error("Automation YAML parsed to %s: %s", type(auto_dict).__name__, repr(auto_dict))
+        return False, f"Automation YAML must be a mapping, got {type(auto_dict).__name__}"
 
     # Ensure id and alias are present
     if "id" not in auto_dict:
