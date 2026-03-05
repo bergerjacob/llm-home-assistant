@@ -570,14 +570,15 @@ async def call_model_wrapper(
         validation_checklist = reply.get("validation_checklist", [])
         questions = reply.get("questions", [])
 
-        # Auto-install if YAML is present and no clarifying questions
+        # Auto-install whenever YAML is present; questions are advisory
         install_success = False
         install_message = ""
-        if automation_yaml and not questions:
+        if automation_yaml:
             install_success, install_message = await _install_automation(hass, automation_yaml)
-            status = install_message if install_success else f"Automation ready (install failed: {install_message})"
-        elif questions:
-            status = "Automation ready (questions)"
+            if install_success:
+                status = install_message if not questions else f"{install_message} (review questions below)"
+            else:
+                status = f"Automation ready (install failed: {install_message})"
         else:
             status = "Automation ready"
 
