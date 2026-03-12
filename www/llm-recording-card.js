@@ -195,8 +195,8 @@ class LLMRecordingCard extends HTMLElement {
       <div class="row">
         <label for="modelSelect">LLM Model:</label>
         <select id="modelSelect">
-          <option value="openai">OpenAI (GPT-4o)</option>
-          <option value="llama3.3">Llama 3.3</option>
+          <option value="openai">OpenAI</option>
+          <option value="local">Local</option>
         </select>
       </div>
 
