@@ -241,7 +241,9 @@ Then call `llm_home_assistant.process_audio_direct` from Developer Tools.
 
 This project is licensed under the MIT License.
 
-## Acknowledgments
+## Contact
 
-- [Home Assistant](https://www.home-assistant.io/) for the open-source smart home platform
-- [OpenAI](https://openai.com/) for the GPT-4o and GPT-4o-Mini models
+- Jacob: bergejac@oregonstate.edu
+- Varunesh: suntharv@oregonstate.edu
+- Andrew: vuand@oregonstate.edu
+- Jhonny: guzmjona@oregonstate.edu
