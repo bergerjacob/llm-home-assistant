@@ -1,52 +1,67 @@
-CONTRIBUTING.md
-Contributing Guide
+# Contributing to LLM Home Assistant
 
-This document explains how our team contributes to the LLM-Powered Conversational Home Assistant project. It ensures that all work follows the team’s agreed-upon processes, meets the Definition of Done, and supports transparency and collaboration.
+Thank you for your interest in contributing to LLM Home Assistant!
 
-Workflow
+## Getting Started
 
-– Everyone works on the main branch by default.
-– Large or experimental features may use a short-lived branch named feature/<name>.
-– Before pushing, confirm that all code runs correctly and follows the team’s Definition of Done.
-– Each push to GitHub automatically posts an update in Microsoft Teams so the team can see progress.
-– All tasks are tracked in Trello. When a task is completed, the Trello card is moved from Doing → Done, and the member posts a short completion note in the Teams “Completed Tasks” channel with a reference to the commit or card.
-– Frequent, small commits are encouraged to maintain project visibility and prevent merge conflicts.
+1. Fork the repository
+2. Clone your fork:
+   ```bash
+   git clone https://github.com/your-username/llm-home-assistant.git
+   cd llm-home-assistant
+   ```
+3. Create a feature branch:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
 
-Definition of Done (DoD)
+## Development Workflow
 
-A task or feature is considered complete when:
-– The code runs without errors and functions as intended.
-– Documentation such as the README, changelog, or API files is updated if behavior changes.
-– At least one teammate reviews large or shared features.
-– The CI/CD workflow in .github/workflows/ci.yml completes successfully.
-– The Trello card for the task is moved to Done.
-– A brief message is posted in Microsoft Teams announcing completion.
-– GitHub automatically notifies the Teams channel of the latest push or merge.
+### Code Standards
 
-Reviews and Merges
+- Follow [PEP 8](https://pep8.org/) style guidelines for Python code
+- Use type hints where appropriate
+- Write docstrings for public functions and classes
+- Keep functions focused and small (prefer single responsibility)
 
-– Small commits may be pushed directly to main.
-– Large or shared features require one approving review before merging.
-– Reviewers verify that the change meets the Definition of Done, includes updated documentation, and does not break existing functionality.
-– All reviews and approvals are tracked through GitHub pull requests.
+### Testing
 
-Documentation and Decisions
+- Run existing tests before making changes:
+  ```bash
+  python3 -m pytest tests/
+  ```
+- Add tests for new functionality
+- Ensure all tests pass before submitting a pull request
 
-– All major design or technical decisions are recorded in DECISIONS.md.
-– Documentation (README, API references, changelog) must be updated whenever new features are added or modified.
-– Every member is responsible for keeping their assigned sections current and accurate.
+### Commit Guidelines
 
-Communication and Support
+- Use clear, descriptive commit messages
+- Keep commits focused and atomic (one logical change per commit)
+- Reference issue numbers where applicable
 
-– The main communication platform is Microsoft Teams.
-– Quick coordination can occur through SMS, but important updates should always be shared in Teams.
-– Mentor and TA meetings are held biweekly on Zoom, coordinated by Jonathan Guzman.
-– Questions, updates, and requests for help must be posted in Teams so all members stay informed.
-– All discussions, updates, and meeting notes are stored in /docs/meetings/.
+## Pull Request Process
 
-Accountability
+1. Update documentation for any changed behavior
+2. Add or update tests as needed
+3. Ensure the CI/CD pipeline passes
+4. Request review from a maintainer
+5. Your PR will be reviewed and merged once approved
 
-– Every change to the project is verifiable through GitHub commits, Trello updates, or Teams announcements.
-– Members are expected to communicate progress regularly, attend meetings, and meet deadlines.
-– Evidence of contribution includes pull requests, commits, and activity records across GitHub, Teams, and Trello.
+## Definition of Done
 
+A contribution is considered complete when:
+
+- Code runs without errors and functions as intended
+- Documentation is updated if behavior changes
+- Tests are added or updated for new functionality
+- All CI checks pass
+
+## Reporting Issues
+
+- Use [GitHub Issues](https://github.com/your-repo/llm-home-assistant/issues) to report bugs or request features
+- Include your Home Assistant version, Python version, and relevant logs
+- For bugs, provide steps to reproduce the issue
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.

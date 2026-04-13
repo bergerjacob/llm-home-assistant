@@ -1,10 +1,17 @@
 # LLM Home Assistant
 
-A Home Assistant custom integration that lets users control IoT devices via natural language using LLMs. Supports both text and voice input.
+A [Home Assistant](https://www.home-assistant.io/) custom integration that enables natural language control of IoT devices using Large Language Models. Supports both text and voice input.
 
-**Design Goals:** This project prioritizes **token savings and reduced latency** through whitelist-based entity filtering (`allow_cfg`). While safety via allowlists is a welcome benefit, the primary optimization target is context size reduction. Smaller context = fewer tokens = faster inference and lower costs.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Home Assistant Compatible](https://img.shields.io/badge/Home%20Assistant-2025.1.4-blue.svg)](https://www.home-assistant.io/)
 
-The integration supports **binary_sensor and sensor entities** natively, displaying their states, device classes, and relevant attributes to the LLM agent for decision-making. Sensors are properly masked and compressed in the compact context.
+## Features
+
+- **Natural Language Control**: Control your smart home devices using everyday language
+- **Voice Support**: Speak commands directly — audio is processed end-to-end via GPT-4o-Audio
+- **Token-Efficient**: Whitelist-based entity filtering reduces context size for faster inference and lower costs
+- **Native Entity Support**: Binary sensors and sensor entities are automatically included with their states and attributes
+- **Audit Logging**: Full interaction history logged for debugging and accountability
 
 ## Architecture
 
@@ -14,7 +21,7 @@ The integration supports **binary_sensor and sensor entities** natively, display
 User text
   -> llm_home_assistant.chat service
   -> call_model_wrapper()
-  -> async_query_openai() -> gpt-5-mini (JSON mode)
+  -> async_query_openai() -> GPT-4o-Mini (JSON mode)
   -> parse actions via Pydantic (Plan/Action models)
   -> _execute_tool_call() for each action
   -> sensor update + event fire
@@ -36,27 +43,110 @@ Microphone
       -> tts_fallback (gTTS / espeak)
 ```
 
-Both pipelines support **whitelist-based entity filtering via `allow_cfg`** to minimize context size. The audio-direct pipeline eliminates the whisper.cpp transcription step. Instead of converting speech to text and then sending text to a separate LLM call, the audio is sent directly to `gpt-4o-audio-preview` which understands speech and produces structured actions in a single API round-trip.
+The audio-direct pipeline sends speech directly to `gpt-4o-audio-preview` which understands audio and produces structured actions in a single API call — no separate transcription step required.
 
-### Legacy Audio Pipeline (Still Available)
-
-The original whisper.cpp pipeline is preserved as a fallback:
+### Legacy Audio Pipeline (Deprecated)
 
 ```
 transcribe_audio service
   -> whisper.cpp STT -> text
-  -> llm_home_assistant.chat service -> gpt-5-mini
+  -> llm_home_assistant.chat service -> GPT-4o-Mini
   -> actions + TTS
 ```
 
-This can be called manually via `llm_home_assistant.transcribe_audio` but is no longer triggered automatically by `stop_recording`.
+This path is preserved for backwards compatibility but is no longer the recommended approach.
+
+## Installation
+
+### Option 1: Manual Installation (Recommended for testing/development)
+
+1. Clone this repository into your Home Assistant's custom components directory:
+
+```bash
+cd /path/to/your/homeassistant/config
+git clone https://github.com/your-repo/llm-home-assistant.git custom_components/llm_home_assistant
+```
+
+2. Create a `.env` file in the project root with your OpenAI API key:
+
+```bash
+echo "OPENAI_API_KEY=sk-your-key-here" > .env
+```
+
+3. Add the integration configuration to your `configuration.yaml`:
+
+```yaml
+llm_home_assistant:
+  openai_api_key: !env_var OPENAI_API_KEY
+  model: gpt-4o-mini
+```
+
+4. Restart Home Assistant
+
+### Option 2: Docker Compose (Full Stack)
+
+```bash
+git clone https://github.com/your-repo/llm-home-assistant.git
+cd llm-home-assistant
+echo "OPENAI_API_KEY=sk-your-key-here" > .env
+docker compose up -d
+```
+
+Then open Home Assistant at `http://localhost:8123`.
+
+## Configuration
+
+### Basic Configuration
+
+```yaml
+llm_home_assistant:
+  openai_api_key: !env_var OPENAI_API_KEY
+  model: gpt-4o-mini
+```
+
+### Whitelist-Based Entity Filtering
+
+To reduce context size and token usage, configure an allowlist in `configuration.yaml`:
+
+```yaml
+llm_home_assistant:
+  openai_api_key: !env_var OPENAI_API_KEY
+  model: gpt-4o-mini
+  allow:
+    domains:
+      - light
+      - switch
+      - cover
+      - binary_sensor
+      - sensor
+    services:
+      - light.turn_on
+      - light.turn_off
+      - switch.turn_on
+      - switch.turn_off
+    entities:
+      - light.kitchen
+      - light.living_room
+      - switch.bedroom
+      - binary_sensor.door
+      - binary_sensor.window
+      - sensor.temperature
+```
+
+| Option | Description |
+|--------|-------------|
+| `domains` | Only include entities from these domains. Common domains: `light`, `switch`, `cover`, `binary_sensor`, `sensor`, `climate`, `fan`, `lock`, `media_player`, `vacuum` |
+| `services` | Only allow these specific services to be called. If `allow` is configured, services must be explicitly listed (fail-closed). |
+| `entities` | Only include these specific entity IDs in the context |
+
+Using whitelist filtering significantly reduces context size, which lowers token usage and latency.
 
 ## Registered Services
 
 | Service | Description |
-|---|---|
-| `llm_home_assistant.chat` | Send text to the LLM. Actions are executed in HA. |
-| `llm_home_assistant.process_command` | Legacy button handler. Reads text from UI input. |
+|---------|-------------|
+| `llm_home_assistant.chat` | Send text to the LLM. Actions are executed automatically in Home Assistant. |
+| `llm_home_assistant.process_command` | Legacy handler for button input. |
 | `llm_home_assistant.start_recording` | Start ffmpeg audio recording from microphone. |
 | `llm_home_assistant.stop_recording` | Stop recording. Automatically triggers `process_audio_direct`. |
 | `llm_home_assistant.process_audio_direct` | Send recorded WAV directly to gpt-4o-audio-preview. |
@@ -68,195 +158,90 @@ This can be called manually via `llm_home_assistant.transcribe_audio` but is no 
 ### Core Files
 
 | File | Purpose |
-|---|---|
+|------|---------|
 | `__init__.py` | Integration setup. Registers all services, loads platforms, frontend. |
 | `call_model.py` | Main orchestration: routes text or audio to the correct OpenAI caller, executes actions in parallel, caches responses, enforces allow_cfg restrictions. |
 | `audio_utils.py` | Audio validation (format, size) and base64 encoding. |
 | `text_audio_processing.py` | ffmpeg recording, whisper.cpp STT, gTTS/espeak TTS. |
-| `device_info.py` | Device state/service formatting + compact context builder with whitelist filtering. Actively used by both OpenAI callers via `build_compact_context()`. |
-| `interaction_logger.py` | Interaction logging system for full audit trail (writes to `_logs/interactions_YYYY-MM-DD.json`). |
-| `services.yaml` | HA service definitions for Developer Tools UI. |
+| `device_info.py` | Device state/service formatting + compact context builder with whitelist filtering. |
+| `interaction_logger.py` | Interaction logging system for full audit trail. |
+| `services.yaml` | Home Assistant service definitions for Developer Tools UI. |
 
 ### Model Files
 
 | File | Purpose |
-|---|---|
-| `models/openai/call_openai.py` | OpenAI caller. Uses `gpt-5-mini` (JSON mode) or `gpt-4o-audio-preview` (function calling). Contains `build_compact_context()` with `allow_cfg` whitelist support for token-optimized context, Pydantic models (`Action`, `Plan`), action normalization, and cache stats. |
-| `models/openai/call_openai_audio.py` | Audio OpenAI caller. Uses `gpt-4o-audio-preview` with function calling. Reuses `build_compact_context()` and Pydantic models from `call_openai.py`. |
-| `models/openai/tool_defs.py` | OpenAI function calling schema (`PROPOSE_ACTIONS_TOOL`). Defines the `propose_actions` function with actions array + explanation. |
-| `models/llama3.3/call_llama.py` | Llama 3.3 stub (not actively used). |
+|------|---------|
+| `models/openai/call_openai.py` | OpenAI caller using GPT-4o-Mini (JSON mode) or gpt-4o-audio-preview (function calling). Contains `build_compact_context()` with whitelist support. |
+| `models/openai/call_openai_audio.py` | Audio-capable OpenAI caller using gpt-4o-audio-preview. |
+| `models/openai/tool_defs.py` | OpenAI function calling schema (`PROPOSE_ACTIONS_TOOL`). |
+| `models/openai/call_JSON_mode.py` | JSON mode implementation for structured responses. |
+| `models/llama3.3/call_llama.py` | Llama 3.3 stub (experimental). |
 
 ### Frontend
 
 | File | Purpose |
-|---|---|
+|------|---------|
 | `www/llm-card.js` | Text input card for Lovelace dashboard. |
 | `www/llm-recording-card.js` | Recording toggle card with model selection. |
 
-## How the Audio-Direct Pipeline Works
-
-1. **`stop_recording`** (`__init__.py`) stops the ffmpeg process, then calls `process_audio_direct`.
-
-2. **`process_audio_direct`** (`__init__.py`) reads `_audios/current_request.wav` as raw bytes from disk.
-
-3. **`call_model_wrapper`** (`call_model.py`) receives `audio_data` and `audio_format` kwargs. Since `audio_data` is present, it:
-   - Validates the audio via `audio_utils.validate_audio()` (checks non-empty, supported format, under 15 MiB)
-   - Base64 encodes via `audio_utils.encode_audio_base64()`
-   - Calls `async_query_openai_audio()` instead of the text-only `async_query_openai()`
-
-4. **`async_query_openai_audio`** (`call_openai_audio.py`) builds the HA context using the same `build_hass_context()` from `call_openai.py` (includes entity/service exclusion filtering and area enrichment), then delegates to `_blocking_audio_gpt_call()` in a thread executor.
-
-6. Back in `call_model_wrapper`, the response is processed identically to the text path: sensor update, event fire, `_execute_tool_call()` loop.
-
-7. **`process_audio_direct`** then writes the response to `_texts/response_text.txt` and calls `tts_fallback` for spoken output.
-
-## Setup
-
-### Prerequisites
-
-- Docker and Docker Compose
-- OpenAI API key with access to `gpt-5-mini` and `gpt-4o-audio-preview`
-- For audio: a microphone connected to the Raspberry Pi
-
-### Configuration
-
-1. Create a `.env` file in the project root:
-    ```
-    OPENAI_API_KEY=sk-your-key-here
-    ```
-
-2. The `docker-compose.yml` mounts the project into HA:
-    ```yaml
-    services:
-      homeassistant:
-        image: ghcr.io/home-assistant/home-assistant:2025.1.4
-        volumes:
-          - ./ha_config:/config
-          - .:/config/custom_components/llm_home_assistant
-        environment:
-          - OPENAI_API_KEY=${OPENAI_API_KEY}
-        ports:
-          - "8123:8123"
-    ```
-
-3. Start the container:
-    ```bash
-    docker compose up -d
-    ```
-
-4. Open Home Assistant at `http://<pi-ip>:8123`
-
-### Configuration with Whitelist Filtering
-
-To reduce context size and token usage, optionally configure an allowlist in `configuration.yaml`:
-
-```yaml
-llm_home_assistant:
-  openai_api_key: !env_var OPENAI_API_KEY
-  model: gpt-5-mini
-  allow:
-    domains: ["light", "switch", "cover", "binary_sensor", "sensor"]
-    services: ["light.turn_on", "light.turn_off", "switch.turn_on", "switch.turn_off", "binary_sensor.update", "sensor.update"]
-    entities: ["light.kitchen", "light.living_room", "switch.bedroom", "binary_sensor.door", "binary_sensor.window", "sensor.temperature"]
-```
-
-- **`domains`**: Only include entities from these domains (all other domains excluded). Common domains: `light`, `switch`, `cover`, `binary_sensor`, `sensor`, `climate`, `fan`, `lock`, `media_player`, `vacuum`, etc.
-- **`services`**: Only allow these specific services to be called (fail-closed: if allow_cfg is active, services MUST be explicitly listed)
-- **`entities`**: Only include these specific entity IDs in context
-
-If `allow` is omitted, no restrictions apply (backwards compatible). Using whitelist significantly reduces context size, lowering token usage and latency. Safety via restrictions is a beneficial side effect.
-
 ## Testing
 
-### Verify the integration loaded
+### Verify the Integration Loaded
 
 ```bash
-docker compose logs homeassistant | grep -i "process_audio_direct\|Error"
+docker compose logs homeassistant | grep -i "llm_home_assistant\|Error"
 ```
 
-You should see `Service 'process_audio_direct' registered` with no import errors.
+You should see service registration messages with no import errors.
 
-### Test the text pipeline
+### Test the Text Pipeline
 
-In HA **Developer Tools > Services**:
-- Service: `llm_home_assistant.chat`
-- Service data:
-  ```yaml
-  text: "What devices are available? Check door sensor status."
-  ```
-- Click **Call Service**
+In Home Assistant **Developer Tools > Services**:
 
-The text pipeline uses JSON mode with `gpt-5-mini` and `build_compact_context()` which applies whitelist filtering (via `allow_cfg`) to minimize context size. Check `sensor.llm_model_response` for the response. The context includes binary_sensor and sensor entities with their current states and device classes.
+1. Select service: `llm_home_assistant.chat`
+2. Service data:
+   ```yaml
+   text: "What devices are available?"
+   ```
+3. Click **Call Service**
 
-### Test the audio-direct pipeline
+Check `sensor.llm_model_response` for the LLM's response.
 
-**Option A: Full recording flow (mic required)**
+### Test the Audio Pipeline
+
+**Option A: Full Recording Flow**
 
 1. Call `llm_home_assistant.start_recording`
-2. Speak a command (e.g. "turn off the kitchen light")
+2. Speak a command (e.g., "turn off the kitchen light")
 3. Call `llm_home_assistant.stop_recording`
-   - Automatically triggers `process_audio_direct` which calls `gpt-4o-audio-preview`
-   - Uses function calling with whitelist-filtered context via `build_compact_context()`
-4. Watch the logs:
-    ```bash
-    docker compose logs -f homeassistant | grep -i "audio\|PROCESS_AUDIO\|explanation\|action"
-    ```
 
-**Option B: Drop a WAV file manually**
+This automatically triggers `process_audio_direct` which calls `gpt-4o-audio-preview`.
 
-Record on the Pi:
+**Option B: Manual WAV File**
+
 ```bash
+# Record audio
 arecord -D plughw:3,0 -f S16_LE -r 16000 -c 1 -d 5 _audios/current_request.wav
 ```
 
-Then call `llm_home_assistant.process_audio_direct` from Developer Tools with no data.
+Then call `llm_home_assistant.process_audio_direct` from Developer Tools.
 
-### Test the legacy whisper pipeline (backwards compatibility)
+## Troubleshooting
 
-Call `llm_home_assistant.transcribe_audio` with:
-```yaml
-filename: "current_request.wav"
-```
+| Symptom | Solution |
+|---------|----------|
+| Import error on startup | Check `docker compose logs homeassistant | grep Error`. Likely a missing dependency or typo. |
+| Service not found | Check startup logs for errors before service registration. |
+| Audio model call failed | API key issue or `gpt-4o-audio-preview` not available on your OpenAI plan. |
+| Empty response / no actions | Verify the WAV file is valid audio (not empty or corrupt). |
+| Wrong ALSA device | Run `arecord -l` to find your microphone device, update in `text_audio_processing.py`. |
+| High token usage | Verify `allow` configuration restricts domains/services/entities. |
 
-This goes through whisper.cpp STT, confirming the old path still works.
+## License
 
-### Expected log output for a successful text call
+This project is licensed under the MIT License.
 
-```
-=== llm_home_assistant.chat ===
-Compact context size: N chars
-OpenAI API token usage - Input: X, Output: Y, Total: Z
-Assistant explanation: I turned off the kitchen light.
-Executing GPT action light.turn_off with {'entity_id': 'light.kitchen'}
-Called TTS fallback after audio-direct processing
-```
+## Acknowledgments
 
-### Expected log output for a successful audio-direct call
-
-```
-=== PROCESS_AUDIO_DIRECT SERVICE ===
-Read audio file: .../current_request.wav (N bytes)
-Audio-direct path: N bytes, format=wav
-Audio API token usage - Input: X, Output: Y, Total: Z
-Assistant explanation: I turned off the kitchen light.
-Executing GPT action light.turn_off with {'entity_id': 'light.kitchen'}
-Called TTS fallback after audio-direct processing
-```
-
-### Troubleshooting
-
-| Symptom | Check |
-|---|---|
-| Import error on startup | Check `docker compose logs homeassistant \| grep Error`. Likely a missing dependency or typo. |
-| `process_audio_direct` service not found | Service didn't register. Check startup logs for errors before that line. |
-| `Audio model call failed` | API key issue or `gpt-4o-audio-preview` not available on your OpenAI plan. |
-| Empty response / no actions | Verify the WAV file is valid audio (not empty or corrupt), or check context size is non-zero. |
-| Wrong ALSA device | Run `arecord -l` on the Pi to find your mic, update the device in `text_audio_processing.py`. |
-| High token usage / large context | Verify `allow_cfg` is configured with domains/services/entities to restrict context. |
-
-## Contacts
-
-- Jacob: bergejac@oregonstate.edu
-- Varunesh: suntharv@oregonstate.edu
-- Andrew: vuand@oregonstate.edu
-- Jhonny: guzmjona@oregonstate.edu
+- [Home Assistant](https://www.home-assistant.io/) for the open-source smart home platform
+- [OpenAI](https://openai.com/) for the GPT-4o and GPT-4o-Mini models

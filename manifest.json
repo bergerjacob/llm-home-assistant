@@ -2,9 +2,9 @@
   "domain": "llm_home_assistant",
   "name": "LLM Home Assistant",
   "codeowners": [],
-  "documentation": "https://github.com/...",
+  "documentation": "https://github.com/your-username/llm-home-assistant/blob/main/README.md",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/...",
+  "issue_tracker": "https://github.com/your-username/llm-home-assistant/issues",
   "requirements": [],
   "platforms": [],
   "version": "0.1.1",
@@ -13,5 +13,4 @@
       "www/llm-recording-card.js"
     ]
   }
-
 }
