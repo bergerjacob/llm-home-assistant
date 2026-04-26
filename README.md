@@ -1,17 +1,49 @@
 # LLM Home Assistant
 
-A [Home Assistant](https://www.home-assistant.io/) custom integration that enables natural language control of IoT devices using Large Language Models. Supports both text and voice input.
-
+[![GitHub Release](https://img.shields.io/github/v/release/[your-username]/llm-home-assistant?label=Download&color=blue)](#installation)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Home Assistant Compatible](https://img.shields.io/badge/Home%20Assistant-2025.1.4-blue.svg)](https://www.home-assistant.io/)
 
-## Features
+**LLM Home Assistant brings true natural language understanding to your smart home.** Instead of memorizing rigid, robotic voice commands, this custom integration allows you to control your IoT devices by speaking or typing to your home naturally. By routing requests through advanced Large Language Models (like GPT-4o and Llama 3.3) and filtering device context to save tokens, it bridges the gap between complex smart home infrastructure and effortless human interaction.
 
-- **Natural Language Control**: Control your smart home devices using everyday language
-- **Voice Support**: Speak commands directly — audio is processed end-to-end via GPT-4o-Audio
-- **Token-Efficient**: Whitelist-based entity filtering reduces context size for faster inference and lower costs
-- **Native Entity Support**: Binary sensors and sensor entities are automatically included with their states and attributes
-- **Audit Logging**: Full interaction history logged for debugging and accountability
+---
+
+## 🌟 Key Features
+
+* **Talk to Your Home Naturally**: No more "Turn off light zero one." Say "I'm heading to bed, can you shut down the house?" and the integration understands the context and executes the right services.
+* **Direct Audio Processing**: Speak commands directly into your dashboard. Audio is processed end-to-end via multimodal models (GPT-4o-Audio) for blazing-fast responses without needing a separate transcription step.
+* **Token-Efficient & Cost-Effective**: Smart whitelist-based entity filtering means only the devices you care about are sent to the LLM, reducing context size, lowering API costs, and speeding up response times.
+* **Native Dashboard Cards**: Includes custom Lovelace UI cards (`llm-card` and `llm-recording-card`) so you can type or record audio directly from your Home Assistant overview.
+
+### See It In Action
+![A dark-themed Home Assistant dashboard showing custom LLM Voice Control and LLM Assistant cards. The interface shows model selection options and a sensor confirming that the bedroom lights were turned on with warm white.](images/demo.png) 
+*(Caption: The custom Lovelace cards allow seamless text or voice interaction, model selection, and automation building directly from your dashboard.)*
+
+---
+
+## 🚀 How to Try It
+
+Ready to upgrade your smart home? 
+
+* **[View the Code on GitHub](https://github.com/[your-username]/llm-home-assistant)**
+* **Prerequisites:** A running instance of [Home Assistant](https://www.home-assistant.io/) and an OpenAI API key.
+
+See the **[Installation](#installation)** section below for step-by-step setup instructions, or spin up the full stack instantly using our provided Docker Compose file.
+
+---
+
+## 👥 Team & Credits
+
+This project was built by a team of software engineering students at Oregon State University:
+
+* **Jacob Berger** - [GitHub](https://github.com/[your-github]) | bergejac@oregonstate.edu
+* **Varunesh Sunthar** - [GitHub](https://github.com/[your-github]) | suntharv@oregonstate.edu
+* **Andrew Vu** - [GitHub](https://github.com/[your-github]) | vuand@oregonstate.edu
+* **Jhonny Guzman** - [GitHub](https://github.com/[your-github]) | guzmjona@oregonstate.edu
+
+**Feedback or bugs?** Please open an issue on our [GitHub Issue Tracker](https://github.com/[your-username]/llm-home-assistant/issues).
+
+---
 
 ## Architecture
 
