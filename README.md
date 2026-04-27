@@ -35,10 +35,10 @@ See the **[Installation](#installation)** section below for step-by-step setup i
 
 This project was built by a team of software engineering students at Oregon State University:
 
-* **Jacob Berger** - [GitHub](https://github.com/[your-github]) | bergejac@oregonstate.edu
-* **Varunesh Sunthar** - [GitHub](https://github.com/[your-github]) | suntharv@oregonstate.edu
-* **Andrew Vu** - [GitHub](https://github.com/[your-github]) | vuand@oregonstate.edu
-* **Jhonny Guzman** - [GitHub](https://github.com/[your-github]) | guzmjona@oregonstate.edu
+* **Jacob Berger** - bergejac@oregonstate.edu
+* **Varunesh Sunthar** - suntharv@oregonstate.edu
+* **Andrew Vu** - vuand@oregonstate.edu
+* **Jhonny Guzman** - guzmjona@oregonstate.edu
 
 **Feedback or bugs?** Please open an issue on our [GitHub Issue Tracker](https://github.com/[your-username]/llm-home-assistant/issues).
 
