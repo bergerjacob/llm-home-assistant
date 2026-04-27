@@ -40,7 +40,7 @@ This project was built by a team of software engineering students at Oregon Stat
 * **Andrew Vu** - vuand@oregonstate.edu
 * **Jhonny Guzman** - guzmjona@oregonstate.edu
 
-**Feedback or bugs?** Please open an issue on our [GitHub Issue Tracker](https://github.com/[your-username]/llm-home-assistant/issues).
+**Feedback or bugs?** Please open an issue on our [GitHub Issue Tracker](https://github.com/bergerjacob/llm-home-assistant/issues).
 
 ---
 
