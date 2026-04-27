@@ -17,7 +17,6 @@
 
 ### See It In Action
 ![A dark-themed Home Assistant dashboard showing custom LLM Voice Control and LLM Assistant cards. The interface shows model selection options and a sensor confirming that the bedroom lights were turned on with warm white.](images/demo.png) 
-*(Caption: The custom Lovelace cards allow seamless text or voice interaction, model selection, and automation building directly from your dashboard.)*
 
 ---
 
