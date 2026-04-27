@@ -24,7 +24,7 @@
 
 Ready to upgrade your smart home? 
 
-* **[View the Code on GitHub](https://github.com/[your-username]/llm-home-assistant)**
+* **[View the Code on GitHub](https://github.com/bergerjacob/llm-home-assistant)**
 * **Prerequisites:** A running instance of [Home Assistant](https://www.home-assistant.io/) and an OpenAI API key.
 
 See the **[Installation](#installation)** section below for step-by-step setup instructions, or spin up the full stack instantly using our provided Docker Compose file.
